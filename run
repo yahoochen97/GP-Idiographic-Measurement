@@ -6,5 +6,5 @@ RANK=5
 declare -a TYPES=("pop")
 
 for TYPE in ${TYPES[@]}; do
-    bsub -G SEAS-Lab-Garnett -o "log/${TYPE}.log" -J "${TYPE}" "./onerun -r ${RANK} -t ${TYPE}"
+    bsub -G SEAS-Lab-Garnett -o "log/${TYPE}.log" -J "${TYPE}" "./onerun ${RANK} ${TYPE}"
 done
