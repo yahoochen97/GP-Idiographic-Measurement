@@ -1,0 +1,8 @@
+#!/bin/bash
+mkdir -p results
+mkdir -p log
+
+mkdir -p /export/cluster-tmp/chenyehu
+export TMPDIR=/export/cluster-tmp/chenyehu
+
+bsub -G SEAS-Lab-Garnett -o "log/both.log" -J "both" "python latent_traits.py -r 5 -t pop"
