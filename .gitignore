@@ -1,4 +1,4 @@
 __pycache__
 .vscode/
-./results
 results/
+.DS_*
