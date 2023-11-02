@@ -2,7 +2,9 @@
 mkdir -p results
 mkdir -p log
 
-mkdir -p /export/cluster-tmp/chenyehu
-export TMPDIR=/export/cluster-tmp/chenyehu
+RANK=5
+declare -a TYPES=("pop")
 
-bsub -G SEAS-Lab-Garnett -o "log/both.log" -J "both" "python latent_traits.py -r 5 -t pop"
+for TYPE in ${TYPES[@]}; do
+    bsub -G SEAS-Lab-Garnett -o "log/${TYPE}.log" -J "${TYPE}" "./onerun -r ${RANK} -t ${TYPE}"
+done
