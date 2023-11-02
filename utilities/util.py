@@ -522,6 +522,7 @@ class OrdinalLMC(ApproximateGP):
     
 import seaborn as sns
 import matplotlib.pylab as plt
+plt.switch_backend('agg')
 import numpy as np
 
 def plot_task_kernel(task_kernel, item_names, file_name):
