@@ -3,7 +3,7 @@ mkdir -p results
 mkdir -p log
 
 RANK=5
-declare -a TYPES=("pop")
+declare -a TYPES=("ind" "both")
 
 for TYPE in ${TYPES[@]}; do
     bsub -G SEAS-Lab-Garnett -o "log/${TYPE}.log" -J "${TYPE}" "./onerun ${RANK} ${TYPE}"
