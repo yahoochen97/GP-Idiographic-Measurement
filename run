@@ -1,10 +1,18 @@
 #!/bin/bash
 mkdir -p results
+mkdir -p results/synthetic
 mkdir -p log
+mkdir -p data/synthetic
 
 RANK=5
+n=10
+m=50
+t=30
+MAXSEED=25
 declare -a TYPES=("pop" "ind" "both")
 
-for TYPE in ${TYPES[@]}; do
-    bsub -G SEAS-Lab-Garnett -o "log/${TYPE}.log" -J "${TYPE}" "./onerun ${RANK} ${TYPE}"
+for SEED in $(seq 1 1 $MAXSEED); do
+    for TYPE in ${TYPES[@]}; do
+        bsub -G SEAS-Lab-Garnett -o "log/${TYPE}.log" -J "${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE}"
+    done
 done

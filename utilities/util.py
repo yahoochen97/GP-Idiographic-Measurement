@@ -241,25 +241,23 @@ class OrdinalLikelihood(_OneDimensionalLikelihood):
             deltas[c] = thresholds[c+1] - thresholds[c]
         return deltas
     
-    def _delta_to_threshold(self, b0, deltas):
-        C = self.C
-        thresholds = torch.zeros((C+1,))
-        thresholds[0] = b0
-        # thresholds[C] = torch.tensor([float('inf')])
-        # thresholds[1] = b1
-        for c in range(C):
-            thresholds[c+1] = thresholds[c] + deltas[c]
-        return thresholds
+    def _delta_to_threshold(self):
+        # C = self.C
+        # thresholds = torch.zeros((C+1,))
+        # thresholds[0] = self.b0
+        # for c in range(C):
+        #     thresholds[c+1] = thresholds[c] + self.deltas[c]
+        return torch.cumsum(torch.cat([torch.tensor([self.b0]),self.deltas]), dim=0)
     
     def _get_thresholds(self):
-        return self._delta_to_threshold(self.b0.data, self.deltas.data)
+        return self._delta_to_threshold()
 
     def forward(self, function_samples, **kwargs):
         thresholds = self._get_thresholds()
         link2 = thresholds[1:] - function_samples
         link1 = thresholds[:-1] - function_samples
-        output_probs = base_distributions.Normal(0, 1).cdf(link2) \
-                    -base_distributions.Normal(0, 1).cdf(link1)
+        norm_func = base_distributions.Normal(0, 1).cdf
+        output_probs = norm_func(link2) - norm_func(link1)
         return base_distributions.Categorical(probs=output_probs)
 
     def log_marginal(self, observations, function_dist, *args, **kwargs):
@@ -274,18 +272,22 @@ class OrdinalLikelihood(_OneDimensionalLikelihood):
                   - mean).div(torch.sqrt(1+var))
         link1 = (thresholds[:-1].unsqueeze(1).repeat(torch.Size([1,*mean.shape]))\
                   - mean).div(torch.sqrt(1+var))
-        output_probs = base_distributions.Normal(0,1).cdf(link2) \
-                    - base_distributions.Normal(0,1).cdf(link1)
+        norm_func = base_distributions.Normal(0, 1).cdf
+        output_probs = norm_func(link2) - norm_func(link1)
         return base_distributions.Categorical(probs=output_probs)
     
     def expected_log_prob(self, observations, function_dist, *params, **kwargs):
-        # Custom function here so we can use log_normal_cdf rather than Normal.cdf
-        # This is going to be less prone to overflow errors
         observations = observations.long()
         thresholds = self._get_thresholds()
-        log_prob_lambda = lambda function_samples: log_normal_cdf(1e-6+ thresholds[observations] - function_samples) \
-                  - log_normal_cdf(1e-6+ thresholds[observations-1]- function_samples)
-        log_prob = self.quadrature(log_prob_lambda, function_dist)
+        norm_func = base_distributions.Normal(0, 1).cdf
+
+        log_prob_lambda = lambda function_samples: (norm_func(thresholds[observations[0]] - function_samples) \
+                  - norm_func(thresholds[observations[0]-1]- function_samples) + 1e-10).log()
+        log_prob = self.quadrature(log_prob_lambda, function_dist[0])
+        for i in range(1,observations.size(0)):
+            log_prob_lambda = lambda function_samples: (norm_func(thresholds[observations[i]] - function_samples) \
+                  - norm_func(thresholds[observations[i]-1]- function_samples) + 1e-10).log()
+            log_prob += self.quadrature(log_prob_lambda, function_dist[i])
         return log_prob
     
 from gpytorch.likelihoods import FixedNoiseGaussianLikelihood
@@ -442,7 +444,6 @@ class UnitMaskKernel(Kernel):
         res = (x1==self.n) * res
         return res
     
-
 class OrdinalLMC(ApproximateGP):
     def __init__(self, inducing_points, n, m, C, rank=5, model_type="pop"):
         self.C = C # cardinality of responses
@@ -460,18 +461,22 @@ class OrdinalLMC(ApproximateGP):
         # zero mean function
         self.mean_module = gpytorch.means.ZeroMean()
         # time covariance 
-        self.t_covar_module = RBFKernel(active_dims=[2])
+        self.t_covar_module = ModuleList([RBFKernel(active_dims=[2]) for i in range(n)])
         # populational item covariance
         self.pop_task_covar_module = IndexKernel(num_tasks=m, rank=rank,\
-                                prior=NormalPrior(0.,1.))
+                                prior=NormalPrior(0.,4.))
+        # for r in range(rank):
+        #     self.pop_task_covar_module.register_constraint(\
+        #         self.pop_task_covar_module.covar_factor[(r*m//rank):(r*m//rank+m//rank),r], Positive())
         # individual item covaraince
+        self.unit_mask_covar_module = ModuleList([UnitMaskKernel(n=i) \
+                    for i in range(n)])
         if model_type!="pop":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
-                    rank=rank, prior=NormalPrior(0.,1.)) for i in range(n)])
-            self.unit_mask_covar_module = ModuleList([UnitMaskKernel(n=i) \
-                    for i in range(n)])
+                    rank=rank, prior=NormalPrior(0.,1)) for i in range(n)])
+           
         # weights for populational and individual covariance, 1 means pop, 0 means ind
-        self.task_weights_module = WeightKernel(input_size=torch.Size([n]))
+        # self.task_weights_module = WeightKernel(input_size=torch.Size([n]))
 
         # fixed matrix for indicating unit in the item task kernel
         # equals 1 if and only if unit indices are the same
@@ -488,15 +493,17 @@ class OrdinalLMC(ApproximateGP):
         # task kernel
         # if self.model_type=="pop":
         task_covar_x = self.pop_task_covar_module(x[:,1])#.evaluate_kernel().evaluate()
-        pop_weights = self.task_weights_module(x[:,0])
-        task_covar_x *= pop_weights
+        # pop_weights = self.task_weights_module(x[:,0])
+        # task_covar_x *= pop_weights
         if self.model_type!="pop":
             for i in range(self.n):
                 # update unit i only by self.unit_mask_covar_module[i](x[:,0])
                 # ind weights by (unit_indicator_x-pop_weights)
                 # task correlation by self.unit_task_covar_module[i](x[:,1])
+                # unit_indicator_x-pop_weights
                 task_covar_x += self.unit_mask_covar_module[i](x[:,0]) * \
-                    (unit_indicator_x-pop_weights) * self.unit_task_covar_module[i](x[:,1])
+                    (unit_indicator_x) * self.unit_task_covar_module[i](x[:,1])
+           
             # task_covar_x = self.pop_task_covar_module(x[:,1]) * 0
             # pop_weights = self.task_weights_module.weights
             # for i in range(self.n):
@@ -512,9 +519,12 @@ class OrdinalLMC(ApproximateGP):
                 # ind_weights = ind_weights.reshape((-1,1)) @ ind_weights.reshape((1,-1)) 
                 # ind_weights = (1-self.task_weights_module.weights[x[:,0].long()]) * ind_weights
                 # task_covar_x += ind_weights * self.unit_task_covar_module[i](x[:,1])
-       
+        
         # time kernel
-        time_covar_x = self.t_covar_module(x)
+        time_covar_x = self.unit_mask_covar_module[0](x[:,0]) * self.t_covar_module[0](x)
+        for i in range(1, self.n):    
+            time_covar_x += self.unit_mask_covar_module[i](x[:,0]) * self.t_covar_module[i](x)
+
         # product of unit indicator, task and time kernels
         covar_x = unit_indicator_x * task_covar_x * time_covar_x
         dist = gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
@@ -525,10 +535,15 @@ import matplotlib.pylab as plt
 plt.switch_backend('agg')
 import numpy as np
 
-def plot_task_kernel(task_kernel, item_names, file_name):
+def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
     plt.figure(figsize=(12, 10))
-    kernel_order = np.argsort(np.diag(task_kernel))
-    task_kernel = task_kernel[kernel_order,:][:,kernel_order]
-    sns.heatmap(task_kernel,xticklabels=item_names[kernel_order], \
-                yticklabels=item_names[kernel_order], cmap=sns.cm.rocket_r)
+    if SORT:
+        kernel_order = np.argsort(np.diag(task_kernel))
+        task_kernel = task_kernel[kernel_order,:][:,kernel_order]
+        item_names = item_names[kernel_order]
+    sns.heatmap(task_kernel,yticklabels=item_names, xticklabels=item_names, \
+                 cmap=sns.cm.rocket_r) 
     plt.savefig(file_name)
+
+def correlation_matrix_distance(r1,r2):
+    return 1 - np.trace(r1 @ r2) / np.linalg.norm(r1) / np.linalg.norm(r2)

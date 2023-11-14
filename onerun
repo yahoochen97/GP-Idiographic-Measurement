@@ -7,6 +7,11 @@ export TMPDIR=/export/cluster-tmp/chenyehu
 
 module add seas-lab-vorobeychik
 
-RANK=$1
-TYPE=$2
-python latent_traits.py -r ${RANK} -t ${TYPE}
+n=$1
+m=$2
+t=$3
+SEED=$4
+RANK=$5
+TYPE=$6
+python python utilities/generate_data.py -n ${n} -m ${m} -t ${t} -s ${SEED} -r ${RANK}
+python simulation.py -n ${n} -m ${m} -t ${t} -s ${SEED} -r ${RANK} -k ${TYPE}
