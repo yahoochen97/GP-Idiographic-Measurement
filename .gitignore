@@ -2,3 +2,4 @@ __pycache__
 .vscode/
 results/
 .DS_*
+./data/synthetic
