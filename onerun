@@ -14,4 +14,4 @@ SEED=$4
 RANK=$5
 TYPE=$6
 python python utilities/generate_data.py -n ${n} -m ${m} -t ${t} -s ${SEED} -r ${RANK}
-python simulation.py -n ${n} -m ${m} -t ${t} -s ${SEED} -r ${RANK} -k ${TYPE}
+# python simulation.py -n ${n} -m ${m} -t ${t} -s ${SEED} -r ${RANK} -k ${TYPE}
