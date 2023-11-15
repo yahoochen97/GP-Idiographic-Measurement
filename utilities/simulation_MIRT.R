@@ -10,7 +10,7 @@ if (length(args)==0) {
   m = 50
   horizon = 30
   RANK = 5
-  TYPE = "graded_uni"
+  TYPE = "graded_multi"
 }
 if (length(args)==6){
   n = as.integer(args[1])
@@ -132,7 +132,7 @@ for(i in 1:n){
           tmp = 0
           for(r in 1:RANK){
             # tmp = tmp + coefs[j,r]*(thetas[i,j,r]-coefs[j,(RANK+1):(RANK+C-1)])
-            tmp = tmp + get_latent_f(coefs[j,r],thetas[i,j,r],coefs[j,(RANK+1):(RANK+C-1)])
+            tmp = tmp + get_latent_f(coefs[j,r],thetas[i,h,r],coefs[j,(RANK+1):(RANK+C-1)])
           }
         }
         if( MODEL_NAME=="graded"){
