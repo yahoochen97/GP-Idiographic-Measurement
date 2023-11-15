@@ -40,10 +40,8 @@ def main(args):
     train_y = torch.tensor(data.y)
     C = train_y.unique().size(0)
 
-    print("splitting data for training/testing...")
-    train_ratio = 0.8
-    train_mask = np.zeros((data.shape[0],))
-    train_mask[np.random.choice(data.shape[0], int(data.shape[0]*train_ratio),replace=False)] = 1
+    # split train/test 
+    train_mask = data.train.to_numpy()
     test_x = train_x[train_mask==0]
     test_y = train_y[train_mask==0]
     train_x = train_x[train_mask==1]

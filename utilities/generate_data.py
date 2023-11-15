@@ -71,6 +71,13 @@ def main(args):
 
     results = pd.DataFrame(results)
     results.columns = ["unit","item","time","y"]
+
+    print("splitting data for training/testing...")
+    train_ratio = 0.8
+    train_mask = np.zeros((results.shape[0],))
+    train_mask[np.random.choice(results.shape[0], int(results.shape[0]*train_ratio),replace=False)] = 1
+    results["train"] = train_mask
+
     PATH = "./data/synthetic/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
