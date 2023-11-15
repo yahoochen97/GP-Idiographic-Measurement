@@ -10,7 +10,7 @@ if (length(args)==0) {
   m = 50
   horizon = 30
   RANK = 5
-  TYPE = "graded_multi"
+  TYPE = "graded_uni"
 }
 if (length(args)==6){
   n = as.integer(args[1])
@@ -96,12 +96,12 @@ if(UNI=="uni"){
 get_latent_f = function(as, theta, bs){
   # set na as very extreme number
   if(MODEL_NAME=="sequential"){
-    bs[is.na(bs)] = -20
+    bs[is.na(bs)] = -1000
   } else{
     if(as>0){
-      bs[is.na(bs)] = 20
+      bs[is.na(bs)] = 1000
     } else{
-      bs[is.na(bs)] = -20
+      bs[is.na(bs)] = -1000
     }
   }
   
