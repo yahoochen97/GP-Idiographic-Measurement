@@ -7,9 +7,9 @@ TYPEs = c("graded_uni", "graded_multi", "gpcm_uni", "gpcm_multi",
 if (length(args)==0) {
   SEED = 1
   n = 10
-  m = 20
+  m = 50
   horizon = 30
-  RANK = 2
+  RANK = 5
   TYPE = "graded_uni"
 }
 if (length(args)==6){
