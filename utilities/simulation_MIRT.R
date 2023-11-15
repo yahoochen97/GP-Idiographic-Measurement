@@ -10,7 +10,7 @@ if (length(args)==0) {
   m = 50
   horizon = 30
   RANK = 5
-  TYPE = "graded_uni"
+  TYPE = "graded_multi"
 }
 if (length(args)==6){
   n = as.integer(args[1])
