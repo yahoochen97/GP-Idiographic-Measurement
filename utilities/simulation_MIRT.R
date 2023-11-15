@@ -127,7 +127,7 @@ for(i in 1:n){
       if(!is.na(test_data[i,h,j])){
         if(UNI=="uni"){
           # tmp = coefs[j]*(thetas[i,j]-coefs[j,(2):C])
-          tmp = get_latent_f(coefs[j],thetas[i,j],coefs[j,2:C])
+          tmp = get_latent_f(coefs[j],thetas[i,h],coefs[j,2:C])
         } else{
           tmp = 0
           for(r in 1:RANK){
