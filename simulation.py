@@ -177,11 +177,11 @@ def main(args):
                 dgp_pop_loadings.T @ dgp_pop_loadings,
                 model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy())))
         print("unit {} weighted dist: {}".format(i, unit_dist))
-        plot_task_kernel(dgp_covariance, np.arange(m), "./data/synthetic/dgp_{}.pdf".format(i), SORT=False)
+        # plot_task_kernel(dgp_covariance, np.arange(m), "./data/synthetic/dgp_{}.pdf".format(i), SORT=False)
         # loading_scales, unit_loadings = np.linalg.eig(task_kernel)
         # loading_idx = np.argpartition(loading_scales, -RANK)[-RANK:]
         # loading_scales[loading_idx] * unit_loadings[:,loading_idx]
-        plot_task_kernel(unit_covariance[i], np.arange(m), "./data/synthetic/est_{}.pdf".format(i), SORT=False)
+        # plot_task_kernel(unit_covariance[i], np.arange(m), "./data/synthetic/est_{}.pdf".format(i), SORT=False)
 
     PATH = "./results/synthetic/"
     if not os.path.exists(PATH):
