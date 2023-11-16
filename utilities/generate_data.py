@@ -76,8 +76,8 @@ def main(args):
             # np.random.choice([np.floor(f),np.ceil(f)],\
             #                 p=[f-np.floor(f),np.ceil(f)-f])           
 
-    plt.hist(results[:,3])
-    plt.show()
+    # plt.hist(results[:,3])
+    # plt.show()
     results = pd.DataFrame(results)
     results.columns = ["unit","item","time","y"]
 
