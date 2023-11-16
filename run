@@ -7,7 +7,7 @@ mkdir -p data/synthetic
 RANK=5
 n=10
 m=20
-t=30
+t=15
 MAXSEED=25
 declare -a TYPES=("pop" "ind" "both")
 # declare -a TYPES=("graded_uni" "graded_multi" "gpcm_uni" "gpcm_multi" "sequential_uni" "sequential_multi")
