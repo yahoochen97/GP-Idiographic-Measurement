@@ -28,7 +28,7 @@ def main(args):
     RANK = int(args["rank"])
     model_type = args["model_type"]
     load_batch_size = 256
-    num_inducing = 2000
+    num_inducing = 1000
     num_epochs = 20
 
     # load data

@@ -39,11 +39,15 @@ def main(args):
     for r in range(RANK):
         mask = np.zeros(RANK,).astype(bool)
         mask[r] = 1
-        pop_loadings[mask,(r*m//RANK):(r*m//RANK+m//RANK)] = 3
-        pop_loadings[~mask,(r*m//RANK):(r*m//RANK+m//RANK)] = 0.1*np.random.normal(0.,1., size=((RANK-1),m//RANK))
+        pop_loadings[mask,(r*m//RANK):(r*m//RANK+m//RANK)] = 3*(2*np.random.choice(2, m//RANK)-1)
+        pop_loadings[~mask,(r*m//RANK):(r*m//RANK+m//RANK)] = np.random.uniform(low=-1,high=1,size=((RANK-1),m//RANK))
         for i in range(n):
-            unit_loadings[i,:,(r*m//RANK):(r*m//RANK+m//RANK)] = 0.5*np.random.normal(0.,1., size=(RANK,m//RANK))
-
+            unit_loadings[i,:,(r*m//RANK):(r*m//RANK+m//RANK)] = np.random.uniform(low=-1,high=1, size=(RANK,m//RANK))
+    
+    drop_mask = np.zeros((n*RANK*m,))
+    drop_mask[np.random.choice(n*RANK*m, int(n*RANK*m*0.5),replace=False)] = 1
+    unit_loadings[drop_mask.reshape((n,RANK,m))==1] = 0
+    
     # build dataset
     results = np.zeros((n*m*horizon, 1+1+1+1))
     iter = 0
@@ -56,8 +60,8 @@ def main(args):
                 f = x[i,h].T @ (pop_loadings[:,j] + unit_loadings[i,:,j])
                 results[iter,3] = f
                 iter += 1
-    results[:,3] = (results[:,3] - results[:,3].min()) / (results[:,3].max()-results[:,3].min()) * 6
 
+    results[:,3] = (results[:,3] - results[:,3].min()) / (results[:,3].max()-results[:,3].min()) * 6
     for iter in range(results.shape[0]):
         f = results[iter,3]
         if f <= 1:
@@ -69,6 +73,8 @@ def main(args):
             # np.random.choice([np.floor(f),np.ceil(f)],\
             #                 p=[f-np.floor(f),np.ceil(f)-f])           
 
+    plt.hist(results[:,3])
+    plt.show()
     results = pd.DataFrame(results)
     results.columns = ["unit","item","time","y"]
 
