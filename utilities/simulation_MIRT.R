@@ -64,12 +64,18 @@ factor_model <- mirt.model(s)
 
 MODEL_NAME = unlist(strsplit(TYPE, "_"))[1]
 UNI = unlist(strsplit(TYPE, "_"))[2]
-if(UNI=="uni"){factor_model = 1}
+EM_method = "QMCEM"
+if(UNI=="uni"){
+  factor_model = 1
+  EM_method="EM"
+}
+
 
 # fit mirt model
 mirt_fit <- mirt(data = data.frame(train_data), 
                    model = factor_model,
-                   itemtype = MODEL_NAME, 
+                   itemtype = MODEL_NAME,
+                   method = EM_method,
                    verbose = FALSE)
 
 if(MODEL_NAME=="sequential"){
