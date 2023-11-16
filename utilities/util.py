@@ -541,8 +541,9 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
         kernel_order = np.argsort(np.diag(task_kernel))
         task_kernel = task_kernel[kernel_order,:][:,kernel_order]
         item_names = item_names[kernel_order]
+    colormap = sns.color_palette("RdBu_r") 
     sns.heatmap(task_kernel,yticklabels=item_names, xticklabels=item_names, \
-                 cmap=sns.cm.rocket_r) 
+                 cmap=colormap) 
     plt.savefig(file_name)
 
 def correlation_matrix_distance(r1,r2):
