@@ -3,3 +3,4 @@ __pycache__
 results/
 .DS_*
 data/synthetic/
+utilities/simmulation_GIMME.R
