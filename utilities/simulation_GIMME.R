@@ -7,7 +7,7 @@ if (length(args)==0) {
   SEED = 1
   n = 10
   m = 20
-  horizon = 30
+  horizon = 15
   RANK = 5
   TYPE = "GIMME"
 }
@@ -75,5 +75,4 @@ s = 'X1~X2
 
 # fit GIMME model
 fit <- gimmeSEM(data = data,
-                out = "./results/synthetic",
-                paths = s)
+                out = "./results/synthetic")

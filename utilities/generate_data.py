@@ -39,10 +39,13 @@ def main(args):
     for r in range(RANK):
         mask = np.zeros(RANK,).astype(bool)
         mask[r] = 1
-        pop_loadings[mask,(r*m//RANK):(r*m//RANK+m//RANK)] = 3*(2*np.random.choice(2, m//RANK)-1)
-        pop_loadings[~mask,(r*m//RANK):(r*m//RANK+m//RANK)] = np.random.uniform(low=-1,high=1,size=((RANK-1),m//RANK))
+        m_ = m//RANK
+        high_loadings = np.array([-3 for _ in range(m_//2)] + [3 for _ in range((m_+1)//2)])
+        np.random.shuffle(high_loadings)
+        pop_loadings[mask,(r*m_):(r*m_+m_)] = high_loadings
+        pop_loadings[~mask,(r*m_):(r*m_+m_)] = np.random.uniform(low=-1,high=1,size=((RANK-1),m//RANK))
         for i in range(n):
-            unit_loadings[i,:,(r*m//RANK):(r*m//RANK+m//RANK)] = np.random.uniform(low=-1,high=1, size=(RANK,m//RANK))
+            unit_loadings[i,:,(r*m_):(r*m_+m_)] = np.random.uniform(low=-1,high=1, size=(RANK,m//RANK))
     
     drop_mask = np.zeros((n*RANK*m,))
     drop_mask[np.random.choice(n*RANK*m, int(n*RANK*m*0.5),replace=False)] = 1
