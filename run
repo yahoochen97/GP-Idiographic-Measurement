@@ -11,7 +11,7 @@ t=30
 MAXSEED=25
 declare -a TYPES=("pop" "ind" "both")
 declare -a TYPES=("graded_uni" "graded_multi" "gpcm_uni" "gpcm_multi" "sequential_uni" "sequential_multi")
-
+declare -a TYPES=("graded_uni")
 
 for SEED in $(seq 1 1 $MAXSEED); do
     for TYPE in ${TYPES[@]}; do
