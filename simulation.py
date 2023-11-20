@@ -100,40 +100,48 @@ def main(args):
     # train GPR
     print("start training...")
     for i in range(num_epochs):
+        log_lik = 0
         for j, (x_batch, y_batch) in enumerate(train_loader):
             optimizer.zero_grad()
             output = model(x_batch)
             loss = -mll(output, y_batch)
             loss.backward()
             optimizer.step()
+            log_lik += loss.item()*y_batch.shape[0]
             if j % 50:
                 print('Epoch %d Iter %d - Loss: %.3f' % (i + 1, j+1, loss.item()))
+        print('Epoch %d - log lik: %.3f' % (i + 1, log_lik))
 
     # define utilities to evaluate
     def evaluate_gpr(data_loader):
         means = torch.tensor([0])
         true_ys = torch.tensor([0])
+        lls = torch.tensor([0])
         with gpytorch.settings.fast_pred_var(), torch.no_grad():
             for x_batch, y_batch in data_loader:
                 test_dist = likelihood(model(x_batch))
+                test_dist.sample()
                 if isinstance(likelihood, gpytorch.likelihoods.GaussianLikelihood):
                     probabilities = test_dist.loc
                 else:
-                    probabilities = test_dist.probs.argmax(axis=0) + 1
+                    probabilities = test_dist.probs.argmax(axis=1) + 1
+                    lls = torch.cat([lls, test_dist.probs[range(y_batch.shape[0]),y_batch.long()-1].log()])
                 means = torch.cat([means, probabilities])
                 true_ys = torch.cat([true_ys, y_batch])
         means = means[1:]
         true_ys = true_ys[1:]
+        lls = lls[1:]
 
         acc = torch.sum(torch.abs(true_ys-means)<=0.5) / true_ys.shape[0]
-        acc1 = torch.sum(torch.abs(true_ys-means)<=1) / true_ys.shape[0]
-        return acc, acc1
+        # acc1 = torch.sum(torch.abs(true_ys-means)<=1) / true_ys.shape[0]
+        lls = torch.sum(lls) / true_ys.shape[0]
+        return acc, lls
 
     model.eval()
     likelihood.eval()
 
-    train_acc, train_acc1 = evaluate_gpr(train_loader)
-    test_acc, test_acc1 = evaluate_gpr(test_loader)
+    train_acc, train_ll = evaluate_gpr(train_loader)
+    test_acc, test_ll = evaluate_gpr(test_loader)
 
     loading_file = "loadings_n{}_m{}_t{}_rank{}_SEED{}.npz".format(n,m,horizon,RANK,SEED)
     PATH = "./data/synthetic/"
@@ -141,13 +149,16 @@ def main(args):
     results = {}
     print("in-sample evaluatiion...")
     print("train acc: {}".format(train_acc))
+    print("train ll: {}".format(train_ll))
     print("out-of-sample evaluatiion...")
     print("test acc: {}".format(test_acc))
+    print("test ll: {}".format(test_ll))
 
     results["train_acc"] = train_acc
-    results["train_acc1"] = train_acc1
+    results["train_ll"] = train_ll
     results["test_acc"] = test_acc
-    results["test_acc1"] = test_acc1
+    results["test_ll"] = test_ll
+    results["log_lik"] = -log_lik
 
     if model_type!="ind":
         task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()

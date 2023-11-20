@@ -258,7 +258,7 @@ class OrdinalLikelihood(_OneDimensionalLikelihood):
         link1 = thresholds[:-1] - function_samples
         norm_func = base_distributions.Normal(0, 1).cdf
         output_probs = norm_func(link2) - norm_func(link1)
-        return base_distributions.Categorical(probs=output_probs)
+        return base_distributions.Categorical(probs=output_probs.t())
 
     def log_marginal(self, observations, function_dist, *args, **kwargs):
         marginal = self.marginal(function_dist, *args, **kwargs)
@@ -274,7 +274,7 @@ class OrdinalLikelihood(_OneDimensionalLikelihood):
                   - mean).div(torch.sqrt(1+var))
         norm_func = base_distributions.Normal(0, 1).cdf
         output_probs = norm_func(link2) - norm_func(link1)
-        return base_distributions.Categorical(probs=output_probs)
+        return base_distributions.Categorical(probs=output_probs.t())
     
     def expected_log_prob(self, observations, function_dist, *params, **kwargs):
         observations = observations.long()

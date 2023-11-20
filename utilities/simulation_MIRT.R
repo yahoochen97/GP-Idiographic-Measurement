@@ -7,10 +7,10 @@ TYPEs = c("graded_uni", "graded_multi", "gpcm_uni", "gpcm_multi",
 if (length(args)==0) {
   SEED = 1
   n = 10
-  m = 50
+  m = 20
   horizon = 30
   RANK = 5
-  TYPE = "graded_multi"
+  TYPE = "graded_uni"
 }
 if (length(args)==6){
   n = as.integer(args[1])
@@ -124,53 +124,63 @@ get_latent_f = function(as, theta, bs){
 }
 
 # predict test observations and likelihood
+train_acc = c()
+train_ll = c()
 test_acc = c()
 test_ll = c()
 dim(test_data) = c(n, horizon, m)
+dim(train_data) = c(n, horizon, m)
 for(i in 1:n){
   for(j in 1:m){
     for(h in 1:horizon){
+      if(UNI=="uni"){
+        # tmp = coefs[j]*(thetas[i,j]-coefs[j,(2):C])
+        tmp = get_latent_f(coefs[j],thetas[i,h],coefs[j,2:C])
+      } else{
+        tmp = 0
+        for(r in 1:RANK){
+          # tmp = tmp + coefs[j,r]*(thetas[i,j,r]-coefs[j,(RANK+1):(RANK+C-1)])
+          tmp = tmp + get_latent_f(coefs[j,r],thetas[i,h,r],coefs[j,(RANK+1):(RANK+C-1)])
+        }
+      }
+      if( MODEL_NAME=="graded"){
+        tmp = exp(tmp)/sum(exp(tmp))
+        ps = c(1-tmp[1])
+        for(c in 1:(C-2)){
+          ps = c(ps, tmp[c]-tmp[c+1])
+        }
+        ps = as.vector(c(ps, tmp[C-1]))
+      } else if (MODEL_NAME=="gpcm"){
+        tmp = c(0, tmp)
+        ps = as.vector(exp(tmp)/sum(exp(tmp)))
+      } else if (MODEL_NAME=="sequential"){
+        tmp = plogis(tmp)
+        ps = c(tmp,1)*c(1,cumprod(1-tmp))
+      }
+      pred_y = which.max(ps)
       if(!is.na(test_data[i,h,j])){
-        if(UNI=="uni"){
-          # tmp = coefs[j]*(thetas[i,j]-coefs[j,(2):C])
-          tmp = get_latent_f(coefs[j],thetas[i,h],coefs[j,2:C])
-        } else{
-          tmp = 0
-          for(r in 1:RANK){
-            # tmp = tmp + coefs[j,r]*(thetas[i,j,r]-coefs[j,(RANK+1):(RANK+C-1)])
-            tmp = tmp + get_latent_f(coefs[j,r],thetas[i,h,r],coefs[j,(RANK+1):(RANK+C-1)])
-          }
-        }
-        if( MODEL_NAME=="graded"){
-          tmp = exp(tmp)/sum(exp(tmp))
-          ps = c(1-tmp[1])
-          for(c in 1:(C-2)){
-            ps = c(ps, tmp[c]-tmp[c+1])
-          }
-          ps = as.vector(c(ps, tmp[C-1]))
-        } else if (MODEL_NAME=="gpcm"){
-          tmp = c(0, tmp)
-          ps = as.vector(exp(tmp)/sum(exp(tmp)))
-        } else if (MODEL_NAME=="sequential"){
-          tmp = plogis(tmp)
-          ps = c(tmp,1)*c(1,cumprod(1-tmp))
-        }
-
-        pred_y = which.max(ps)
         test_acc = c(test_acc, pred_y==test_data[i,h,j])
         if(ps[test_data[i,h,j]]<=-1e-6){
           print(paste(i,"_",h,"_",j,sep=""))
         }
         test_ll = c(test_ll, log(1e-6+ps[test_data[i,h,j]]))
+      }else{
+        train_acc = c(train_acc, pred_y==train_data[i,h,j])
+        if(ps[train_data[i,h,j]]<=-1e-6){
+          print(paste(i,"_",h,"_",j,sep=""))
+        }
+        train_ll = c(train_ll, log(1e-6+ps[train_data[i,h,j]]))
       }
     }
   }
 }
 
+train_acc = mean(train_acc)
+train_ll = mean(train_ll[!is.na(train_ll)])
 test_acc = mean(test_acc)
 test_ll = mean(test_ll[!is.na(test_ll)])
 
-save(loadings, correlation_matrix, log_lik, BIC, thetas, test_acc, test_ll,
+save(loadings, correlation_matrix, log_lik, BIC, thetas,train_acc, train_ll,test_acc, test_ll,
      file=paste("./results/synthetic/", TYPE,"_", HYP, ".RData" , sep=""))
 
 quit()

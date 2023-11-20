@@ -81,9 +81,9 @@ def main(load_batch_size = 1024, num_inducing = 1000, num_epochs = 5, item_rank=
     
     inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
     # likelihood = MyDirichletClassificationLikelihood(train_y.long(), C, learn_additional_noise=True)
-    # likelihood = OrdinalLikelihood(thresholds=torch.tensor([-5.,\
-    #                                 -2.,-1.,1.,2.,5.]))
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
+    likelihood = OrdinalLikelihood(thresholds=torch.tensor([-5.,\
+                                    -2.,-1.,1.,2.,5.]))
+    # likelihood = gpytorch.likelihoods.GaussianLikelihood()
     model = OrdinalLMC(inducing_points,n,m,C,rank=item_rank, model_type=model_type)
 
     model.train()
