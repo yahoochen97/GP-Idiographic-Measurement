@@ -4,7 +4,6 @@ import torch
 import os
 import pandas as pd
 import gpytorch
-import argparse
 from gpytorch.mlls import VariationalELBO
 
 from scipy.stats import norm
@@ -96,7 +95,6 @@ def main():
     print("train acc: {}".format(train_acc))
     print("train ll: {}".format(train_ll))
 
-    import os
     directory = "./results/" +  model_type
     if not os.path.exists(directory):
         os.makedirs(directory)
