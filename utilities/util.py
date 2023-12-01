@@ -548,3 +548,26 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
 
 def correlation_matrix_distance(r1,r2):
     return 1 - np.trace(r1 @ r2) / np.linalg.norm(r1) / np.linalg.norm(r2)
+
+def evaluate_gpr(model, likelihood, data_loader):
+    means = torch.tensor([0])
+    true_ys = torch.tensor([0])
+    lls = torch.tensor([0])
+    with gpytorch.settings.fast_pred_var(), torch.no_grad():
+        for x_batch, y_batch in data_loader:
+            test_dist = likelihood(model(x_batch))
+            test_dist.sample()
+            if isinstance(likelihood, gpytorch.likelihoods.GaussianLikelihood):
+                probabilities = test_dist.loc
+            else:
+                probabilities = test_dist.probs.argmax(axis=1) + 1
+                lls = torch.cat([lls, test_dist.probs[range(y_batch.shape[0]),y_batch.long()-1].log()])
+            means = torch.cat([means, probabilities])
+            true_ys = torch.cat([true_ys, y_batch])
+    means = means[1:]
+    true_ys = true_ys[1:]
+    lls = lls[1:]
+
+    acc = torch.sum(torch.abs(true_ys-means)<=0.5) / true_ys.shape[0]
+    lls = torch.sum(lls) / true_ys.shape[0]
+    return acc, lls

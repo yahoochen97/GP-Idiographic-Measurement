@@ -102,6 +102,12 @@ def main():
     task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
     file_name = "./results/" + model_type + "/loopr_rank_{}.pdf".format(Q)
     plot_task_kernel(task_kernel, Items, file_name, SORT=False)
+
+    results = {}
+    results["pop_covariance"] = task_kernel
+    PATH = "./results/"
+    cov_file = "loopr_rank{}.npz".format(Q)
+    np.savez(PATH+cov_file, **results)
    
 if __name__=="__main__":
     main()
