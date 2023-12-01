@@ -5,7 +5,7 @@ TYPEs = c("graded_uni", "graded_multi", "gpcm_uni", "gpcm_multi",
           "sequential_uni", "sequential_multi")
 
 if (length(args)==0) {
-  SEED = 1
+  SEED = 20
   n = 10
   m = 20
   horizon = 30
@@ -70,12 +70,12 @@ if(UNI=="uni"){
   EM_method="EM"
 }
 
-
 # fit mirt model
 mirt_fit <- mirt(data = data.frame(train_data), 
                    model = factor_model,
                    itemtype = MODEL_NAME,
                    method = EM_method,
+                   optimizer = "nlminb",
                    verbose = FALSE)
 
 if(MODEL_NAME=="sequential"){
@@ -183,4 +183,4 @@ test_ll = mean(test_ll[!is.na(test_ll)])
 save(loadings, correlation_matrix, log_lik, BIC, thetas,train_acc, train_ll,test_acc, test_ll,
      file=paste("./results/synthetic/", TYPE,"_", HYP, ".RData" , sep=""))
 
-quit()
+# quit()
