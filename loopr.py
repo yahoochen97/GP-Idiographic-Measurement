@@ -23,7 +23,7 @@ def main():
     # load data
     load_batch_size = 512
     num_inducing = 1000
-    num_epochs = 1
+    num_epochs = 5
     model_type="pop"
     print("loading data...")
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
