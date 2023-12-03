@@ -445,7 +445,7 @@ class UnitMaskKernel(Kernel):
         return res
     
 class OrdinalLMC(ApproximateGP):
-    def __init__(self, inducing_points, n, m, C, rank=5, model_type="pop"):
+    def __init__(self, inducing_points, n, m, C, pop_rank=5, unit_rank=5, model_type="pop"):
         self.C = C # cardinality of responses
         self.n = n # number of respondents
         self.m = m # number of items
@@ -463,7 +463,7 @@ class OrdinalLMC(ApproximateGP):
         # time covariance 
         self.t_covar_module = ModuleList([RBFKernel(active_dims=[2]) for i in range(n)])
         # populational item covariance
-        self.pop_task_covar_module = IndexKernel(num_tasks=m, rank=rank,\
+        self.pop_task_covar_module = IndexKernel(num_tasks=m, rank=pop_rank,\
                                 prior=NormalPrior(0.,4.))
         # for r in range(rank):
         #     self.pop_task_covar_module.register_constraint(\
@@ -473,7 +473,7 @@ class OrdinalLMC(ApproximateGP):
                     for i in range(n)])
         if model_type!="pop":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
-                    rank=rank, prior=NormalPrior(0.,1)) for i in range(n)])
+                    rank=unit_rank, prior=NormalPrior(0.,1)) for i in range(n)])
            
         # weights for populational and individual covariance, 1 means pop, 0 means ind
         # self.task_weights_module = WeightKernel(input_size=torch.Size([n]))

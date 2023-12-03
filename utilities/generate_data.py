@@ -73,11 +73,7 @@ def main(args):
             results[iter,3] = 5
         else:
             results[iter,3] = np.rint(f)
-            # np.random.choice([np.floor(f),np.ceil(f)],\
-            #                 p=[f-np.floor(f),np.ceil(f)-f])           
 
-    # plt.hist(results[:,3])
-    # plt.show()
     results = pd.DataFrame(results)
     results.columns = ["unit","item","time","y"]
 

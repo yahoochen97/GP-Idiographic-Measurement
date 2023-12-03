@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import os
 import pandas as pd
-import gpytorch
 import argparse
 from gpytorch.mlls import VariationalELBO
 
@@ -18,7 +17,7 @@ warnings.filterwarnings("ignore")
 from gpytorch.mlls import VariationalELBO
 from torch.utils.data import TensorDataset, DataLoader
 from utilities.util import OrdinalLMC, OrdinalLikelihood
-from utilities.util import correlation_matrix_distance, plot_task_kernel
+from utilities.util import correlation_matrix_distance, plot_task_kernel, evaluate_gpr
 
 def main(args):
     SEED = int(args["seed"])
@@ -26,6 +25,7 @@ def main(args):
     m = int(args["num_item"])
     horizon = int(args["num_period"])
     RANK = int(args["rank"])
+    FACTOR = int(args["factor"])
     model_type = args["model_type"]
     load_batch_size = 256
     num_inducing = 1000
@@ -57,7 +57,7 @@ def main(args):
     likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,\
                                    -2.,-1.,1.,2.,20.]))
     # likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = OrdinalLMC(inducing_points,n,m,C,rank=RANK, model_type=model_type)
+    model = OrdinalLMC(inducing_points,n,m,C, pop_rank=FACTOR, unit_rank=FACTOR, model_type=model_type)
 
     model.train()
     likelihood.train()
@@ -112,36 +112,12 @@ def main(args):
                 print('Epoch %d Iter %d - Loss: %.3f' % (i + 1, j+1, loss.item()))
         print('Epoch %d - log lik: %.3f' % (i + 1, log_lik))
 
-    # define utilities to evaluate
-    def evaluate_gpr(data_loader):
-        means = torch.tensor([0])
-        true_ys = torch.tensor([0])
-        lls = torch.tensor([0])
-        with gpytorch.settings.fast_pred_var(), torch.no_grad():
-            for x_batch, y_batch in data_loader:
-                test_dist = likelihood(model(x_batch))
-                test_dist.sample()
-                if isinstance(likelihood, gpytorch.likelihoods.GaussianLikelihood):
-                    probabilities = test_dist.loc
-                else:
-                    probabilities = test_dist.probs.argmax(axis=1) + 1
-                    lls = torch.cat([lls, test_dist.probs[range(y_batch.shape[0]),y_batch.long()-1].log()])
-                means = torch.cat([means, probabilities])
-                true_ys = torch.cat([true_ys, y_batch])
-        means = means[1:]
-        true_ys = true_ys[1:]
-        lls = lls[1:]
-
-        acc = torch.sum(torch.abs(true_ys-means)<=0.5) / true_ys.shape[0]
-        # acc1 = torch.sum(torch.abs(true_ys-means)<=1) / true_ys.shape[0]
-        lls = torch.sum(lls) / true_ys.shape[0]
-        return acc, lls
-
+    # prediction
     model.eval()
     likelihood.eval()
 
-    train_acc, train_ll = evaluate_gpr(train_loader)
-    test_acc, test_ll = evaluate_gpr(test_loader)
+    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader)
+    test_acc, test_ll = evaluate_gpr(model, likelihood, test_loader)
 
     loading_file = "loadings_n{}_m{}_t{}_rank{}_SEED{}.npz".format(n,m,horizon,RANK,SEED)
     PATH = "./data/synthetic/"
@@ -183,11 +159,11 @@ def main(args):
         results["unit_{}_covariance".format(i)] = task_kernel
         dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
         unit_dist = correlation_matrix_distance(dgp_covariance, unit_covariance[i])
-        if model_type!="pop":
-            print("unit {} dist: {}".format(i, correlation_matrix_distance(\
-                dgp_pop_loadings.T @ dgp_pop_loadings,
-                model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy())))
-        print("unit {} weighted dist: {}".format(i, unit_dist))
+        # if model_type!="pop":
+        #     print("unit {} dist: {}".format(i, correlation_matrix_distance(\
+        #         dgp_pop_loadings.T @ dgp_pop_loadings,
+        #         model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy())))
+        print("unit {} dist: {}".format(i, unit_dist))
         # plot_task_kernel(dgp_covariance, np.arange(m), "./data/synthetic/dgp_{}.pdf".format(i), SORT=False)
         # loading_scales, unit_loadings = np.linalg.eig(task_kernel)
         # loading_idx = np.argpartition(loading_scales, -RANK)[-RANK:]
@@ -197,16 +173,17 @@ def main(args):
     PATH = "./results/synthetic/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
-    cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(model_type, n,m,horizon,RANK,SEED)
+    cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(model_type, n,m,horizon,FACTOR,SEED)
     np.savez(PATH+cov_file, **results)
 
 if __name__=="__main__":
-    parser = argparse.ArgumentParser(description='-n num_unit -m num_item -t num_period -s seed')
+    parser = argparse.ArgumentParser(description='-n num_unit -m num_item -t num_period -s seed -r rank -f factor')
     parser.add_argument('-n','--num_unit', help='number of units', required=False)
     parser.add_argument('-m','--num_item', help='number of items', required=False)
     parser.add_argument('-t','--num_period', help='number of periods', required=False)
     parser.add_argument('-s','--seed', help='random seed', required=False)
     parser.add_argument('-k','--model_type', help='type of model', required=False)
     parser.add_argument('-r','--rank', help='rank of item correlation matrix', required=False)
+    parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
     main(args)
