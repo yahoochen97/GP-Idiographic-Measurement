@@ -22,8 +22,8 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 def main():
     # load data
     load_batch_size = 512
-    num_inducing = 1000
-    num_epochs = 5
+    num_inducing = 60
+    num_epochs = 10
     model_type="pop"
     print("loading data...")
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
@@ -42,9 +42,9 @@ def main():
     iter = 0
     for i in range(n):
         for j in range(m):
-            train_x[iter, 0] = i
+            train_x[iter, 0] = 0
             train_x[iter, 1] = j
-            train_x[iter, 2] = horizon
+            train_x[iter, 2] = 0
             train_y[iter] = data.iloc[i][j]
             iter += 1
 
@@ -53,14 +53,20 @@ def main():
 
     # initialize likelihood and model
     
-    inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
+    inducing_points = train_x[:num_inducing,:]
     likelihood = OrdinalLikelihood(thresholds=torch.tensor([-5.,-2.,-1.,1.,2.,5.]))
-    model = OrdinalLMC(inducing_points,n,m,C,rank=Q, model_type=model_type)
+    model = OrdinalLMC(inducing_points,n=1,m=m,C=C,horizon=horizon,pop_rank=Q, model_type=model_type)
 
     model.train()
     likelihood.train()
 
-    for i in range(n):
+    # initialize covariance of pop factors
+    cov = torch.tensor(data.corr().to_numpy())
+    _, _, V = torch.pca_lowrank(cov, q = Q)
+    model.pop_task_covar_module.covar_factor.data = 4*torch.matmul(cov, V[:,:Q])
+
+    # fix time length scale
+    for i in range(1):
         model.t_covar_module[i].lengthscale = 1
     model.fixed_module.raw_lengthscale.requires_grad = False
     final_params = list(set(model.parameters()) - \
@@ -81,12 +87,11 @@ def main():
             loss = -mll(output, y_batch)
             loss.backward()
             optimizer.step()
-            log_lik += loss.item()*y_batch.shape[0]
+            log_lik += -loss.item()*y_batch.shape[0]
             if j % 50:
                 print('Epoch %d Iter %d - Loss: %.3f' % (i + 1, j+1, loss.item()))
         print('Epoch %d - log lik: %.3f' % (i + 1, log_lik))
 
-    
     print("in-sample evaluatiion...")
     model.eval()
     likelihood.eval()
@@ -94,19 +99,30 @@ def main():
     print("train acc: {}".format(train_acc))
     print("train ll: {}".format(train_ll))
 
-    directory = "./results/" +  model_type
+    directory = "./results/loopr/"
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
-    file_name = "./results/" + model_type + "/loopr_rank_{}.pdf".format(Q)
-    plot_task_kernel(task_kernel, Items, file_name, SORT=False)
-
     results = {}
     results["pop_covariance"] = task_kernel
-    PATH = "./results/"
-    cov_file = "loopr_rank{}.npz".format(Q)
-    np.savez(PATH+cov_file, **results)
-   
+    cov_file = "loopr_pop.npz".format(Q)
+    np.savez(directory+cov_file, **results)
+
+    # task_kernel = np.clip(task_kernel,-4,4) / 4
+    file_name = directory + "/loopr_pop.pdf"
+    item_order = sorted(range(len(Items)), key=lambda k: Items[k])
+    plot_task_kernel(task_kernel[item_order,:][:,item_order], Items[item_order], file_name, SORT=False)
+
+def cor():
+    data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
+    Items = data.columns
+    cov = data.corr().to_numpy()
+
+    file_name = "./results/loopr/loopr_cov.pdf"
+    item_order = sorted(range(len(Items)), key=lambda k: Items[k])
+    plot_task_kernel(cov[item_order,:][:,item_order], Items[item_order], file_name, SORT=False)
+
 if __name__=="__main__":
     main()
+    # cor()

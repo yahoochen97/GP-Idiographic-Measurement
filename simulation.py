@@ -57,7 +57,7 @@ def main(args):
     likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,\
                                    -2.,-1.,1.,2.,20.]))
     # likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = OrdinalLMC(inducing_points,n,m,C, pop_rank=FACTOR, unit_rank=FACTOR, model_type=model_type)
+    model = OrdinalLMC(inducing_points,n,m,C,horizon, pop_rank=FACTOR, unit_rank=FACTOR, model_type=model_type)
 
     model.train()
     likelihood.train()
@@ -93,6 +93,14 @@ def main(args):
                         list(likelihood.parameters())
 
     optimizer = torch.optim.Adam(final_params, lr=0.1)
+    
+    num_params = 0
+    for p in final_params:
+        if p.requires_grad:
+            num_param = np.prod(p.size())
+            if num_param<num_inducing:
+                num_params += num_param
+    print("num of model parameters: {}".format(num_params))
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
@@ -107,7 +115,7 @@ def main(args):
             loss = -mll(output, y_batch)
             loss.backward()
             optimizer.step()
-            log_lik += loss.item()*y_batch.shape[0]
+            log_lik += -loss.item()*y_batch.shape[0]
             if j % 50:
                 print('Epoch %d Iter %d - Loss: %.3f' % (i + 1, j+1, loss.item()))
         print('Epoch %d - log lik: %.3f' % (i + 1, log_lik))
@@ -134,7 +142,8 @@ def main(args):
     results["train_ll"] = train_ll
     results["test_acc"] = test_acc
     results["test_ll"] = test_ll
-    results["log_lik"] = -log_lik
+    results["log_lik"] = log_lik
+    results["BIC"] = num_params*np.log(train_x.size(0)) - 2*log_lik 
 
     if model_type!="ind":
         task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()

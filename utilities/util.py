@@ -445,10 +445,11 @@ class UnitMaskKernel(Kernel):
         return res
     
 class OrdinalLMC(ApproximateGP):
-    def __init__(self, inducing_points, n, m, C, pop_rank=5, unit_rank=5, model_type="pop"):
+    def __init__(self, inducing_points, n, m, C, horizon, pop_rank=5, unit_rank=5, model_type="pop"):
         self.C = C # cardinality of responses
         self.n = n # number of respondents
         self.m = m # number of items
+        self.horizon = horizon # number of time periods
         self.model_type = model_type
         self.batch_shape = torch.Size([])
 
@@ -520,13 +521,18 @@ class OrdinalLMC(ApproximateGP):
                 # ind_weights = (1-self.task_weights_module.weights[x[:,0].long()]) * ind_weights
                 # task_covar_x += ind_weights * self.unit_task_covar_module[i](x[:,1])
         
-        # time kernel
-        time_covar_x = self.unit_mask_covar_module[0](x[:,0]) * self.t_covar_module[0](x)
-        for i in range(1, self.n):    
-            time_covar_x += self.unit_mask_covar_module[i](x[:,0]) * self.t_covar_module[i](x)
-
         # product of unit indicator, task and time kernels
-        covar_x = unit_indicator_x * task_covar_x * time_covar_x
+        covar_x = unit_indicator_x * task_covar_x
+
+        # time kernel
+        if self.horizon > 1:
+            time_covar_x = self.unit_mask_covar_module[0](x[:,0]) * self.t_covar_module[0](x)
+            for i in range(1, self.n):    
+                time_covar_x += self.unit_mask_covar_module[i](x[:,0]) * self.t_covar_module[i](x)
+
+            # product of time kernels
+            covar_x = covar_x * time_covar_x
+            
         dist = gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
         return dist
     
