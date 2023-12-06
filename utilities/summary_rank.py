@@ -30,7 +30,7 @@ def main(args):
         dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings
         dgp_unit_loadings = dgp_loadings["unit_loadings"]
         for i in range(len(FACTORS)):
-            cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(MODEL, n,m,horizon,RANK,SEED_)
+            cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(MODEL, n,m,horizon,FACTORS[i],SEED_)
             data = np.load(RESULT_PATH + cov_file)
             
             results[i,0,SEED] = np.array(data["train_acc"])
