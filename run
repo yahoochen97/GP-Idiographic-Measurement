@@ -26,3 +26,5 @@ for SEED in $(seq 1 1 $MAXSEED); do
         done
     done
 done
+
+# bsub -G SEAS-Lab-Garnett -o "log/loopr.log" -J "loopr" "module add seas-lab-vorobeychik;python loopr.py"

@@ -2,12 +2,11 @@
 import numpy as np
 import pandas as pd
 import argparse
-import pyreadr
 
 from util import correlation_matrix_distance, plot_task_kernel
 
-MODELS = ["pop", "ind", "both", "graded_uni", "graded_multi", "gpcm_uni",\
-           "gpcm_multi", "sequential_uni", "sequential_multi"]
+MODEL = "both"
+FACTORS = [2,5,8]
 
 RESULT_PATH = "./results/synthetic/"
 DGP_PATH = "./data/synthetic/"
@@ -20,7 +19,7 @@ def main(args):
     RANK = int(args["rank"])
 
     MEASURES = ["train_acc", "train_ll", "test_acc", "test_ll"] + ["cov_dist_{}".format(i) for i in range(n)]
-    results = np.zeros((len(MODELS), len(MEASURES), MAXSEED))
+    results = np.zeros((len(FACTORS), len(MEASURES), MAXSEED))
 
     for SEED in range(MAXSEED):
         SEED_ = SEED + 1
@@ -30,14 +29,9 @@ def main(args):
         dgp_pop_loadings = dgp_loadings["pop_loadings"]
         dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings
         dgp_unit_loadings = dgp_loadings["unit_loadings"]
-        for i in range(len(MODELS)):
-            if i<3:
-                
-                cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(MODELS[i], n,m,horizon,RANK,SEED_)
-                data = np.load(RESULT_PATH + cov_file)
-            else:
-                cov_file = "{}_n{}_m{}_t{}_rank{}_SEED{}.RData".format(MODELS[i], n,m,horizon,RANK,SEED_)
-                data = pyreadr.read_r(RESULT_PATH + cov_file)
+        for i in range(len(FACTORS)):
+            cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(MODEL, n,m,horizon,RANK,SEED_)
+            data = np.load(RESULT_PATH + cov_file)
             
             results[i,0,SEED] = np.array(data["train_acc"])
             results[i,1,SEED] = np.array(data["train_ll"])
@@ -45,10 +39,7 @@ def main(args):
             results[i,3,SEED] = np.array(data["test_ll"])
             for unit_i in range(n):
                 dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
-                if i<3:
-                    unit_cov = data["unit_{}_covariance".format(unit_i)]
-                else:
-                    unit_cov = np.array(data["correlation_matrix"])
+                unit_cov = data["unit_{}_covariance".format(unit_i)]
                 unit_dist = correlation_matrix_distance(dgp_covariance, unit_cov)
                 results[i,4+unit_i,SEED] = unit_dist
     
@@ -57,11 +48,11 @@ def main(args):
     results_std = np.round(np.std(results, axis=2) / np.sqrt(MAXSEED-1), decimals=3)
 
     results = pd.DataFrame(results_mu, columns=MEASURES)
-    results = results.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
+    results = results.rename(index=dict(zip([i for i in range(len(FACTORS))], FACTORS)))
     print(results)
 
     results = pd.DataFrame(results_std, columns=MEASURES)
-    results = results.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
+    results = results.rename(index=dict(zip([i for i in range(len(FACTORS))], FACTORS)))
     print(results)
 
 if __name__=="__main__":
