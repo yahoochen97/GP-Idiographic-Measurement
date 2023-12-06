@@ -6,8 +6,8 @@ import pyreadr
 
 from util import correlation_matrix_distance, plot_task_kernel
 
-MODELS = ["pop", "ind", "both", "graded_uni", "graded_multi", "gpcm_uni",\
-           "gpcm_multi", "sequential_uni", "sequential_multi"]
+MODELS = ["pop", "ind", "both","graded_multi",\
+           "gpcm_multi", "sequential_multi"]
 
 RESULT_PATH = "./results/synthetic/"
 DGP_PATH = "./data/synthetic/"

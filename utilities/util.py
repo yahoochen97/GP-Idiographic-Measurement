@@ -445,7 +445,7 @@ class UnitMaskKernel(Kernel):
         return res
     
 class OrdinalLMC(ApproximateGP):
-    def __init__(self, inducing_points, n, m, C, horizon, pop_rank=5, unit_rank=5, model_type="pop"):
+    def __init__(self, inducing_points, n, m, C, horizon, pop_rank=5, unit_rank=1, model_type="pop"):
         self.C = C # cardinality of responses
         self.n = n # number of respondents
         self.m = m # number of items

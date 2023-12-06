@@ -9,22 +9,31 @@ n=10
 m=20
 t=30
 MAXSEED=25
-declare -a TYPES=("pop" "ind" "both" "graded_uni" "graded_multi" "gpcm_uni" "gpcm_multi" "sequential_uni" "sequential_multi")
+declare -a TYPES=("pop" "ind" "both" "graded_multi" "gpcm_multi" "sequential_multi")
+declare -a FACTORS=(5)
 
-# for SEED in $(seq 1 1 $MAXSEED); do
-#     for TYPE in ${TYPES[@]}; do
-#         bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE}"
-#     done
-# done
-
-declare -a TYPES=("both")
-declare -a FACTORS=(2 5 8)
-for SEED in $(seq 1 1 $MAXSEED); do
-    for TYPE in ${TYPES[@]}; do
-        for FACTOR in ${FACTORS[@]}; do
-            bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${FACTOR}"
+if [ $1 = "run" ]
+then
+    for SEED in $(seq 1 1 $MAXSEED); do
+        for TYPE in ${TYPES[@]}; do
+            bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE}"
         done
     done
-done
+
+    declare -a TYPES=("both")
+    declare -a FACTORS=(2 8)
+    for SEED in $(seq 1 1 $MAXSEED); do
+        for TYPE in ${TYPES[@]}; do
+            for FACTOR in ${FACTORS[@]}; do
+                bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${FACTOR}"
+            done
+        done
+    done
+elif [ $1 = "summary" ]
+then
+    python utilities/summary.py -n 10 -m 20 -t 30 -r 5 -s 25
+    python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
+fi
+
 
 # bsub -G SEAS-Lab-Garnett -o "log/loopr.log" -J "loopr" "module add seas-lab-vorobeychik;python loopr.py"

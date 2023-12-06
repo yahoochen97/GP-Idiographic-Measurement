@@ -57,7 +57,7 @@ def main(args):
     likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,\
                                    -2.,-1.,1.,2.,20.]))
     # likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = OrdinalLMC(inducing_points,n,m,C,horizon, pop_rank=FACTOR, unit_rank=FACTOR, model_type=model_type)
+    model = OrdinalLMC(inducing_points,n,m,C,horizon, pop_rank=FACTOR, unit_rank=1, model_type=model_type)
 
     model.train()
     likelihood.train()
