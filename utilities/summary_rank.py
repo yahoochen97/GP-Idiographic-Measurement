@@ -18,7 +18,7 @@ def main(args):
     horizon = int(args["num_period"])
     RANK = int(args["rank"])
 
-    MEASURES = ["train_acc", "train_ll", "test_acc", "test_ll"] + ["cov_dist_{}".format(i) for i in range(n)]
+    MEASURES = ["train_acc", "train_ll", "BIC", "test_acc", "test_ll"] + ["cov_dist_{}".format(i) for i in range(n)]
     results = np.zeros((len(FACTORS), len(MEASURES), MAXSEED))
 
     for SEED in range(MAXSEED):
@@ -35,8 +35,10 @@ def main(args):
             
             results[i,0,SEED] = np.array(data["train_acc"])
             results[i,1,SEED] = np.array(data["train_ll"])
-            results[i,2,SEED] = np.array(data["test_acc"])
-            results[i,3,SEED] = np.array(data["test_ll"])
+            N = n*m*horizon*0.8
+            results[i,2,SEED] = (5+m*FACTORS[i]*(n+1)+n)*np.log(N) -2*np.array(data["train_ll"])*N
+            results[i,3,SEED] = np.array(data["test_acc"])
+            results[i,4,SEED] = np.array(data["test_ll"])
             for unit_i in range(n):
                 dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
                 unit_cov = data["unit_{}_covariance".format(unit_i)]
