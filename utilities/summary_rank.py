@@ -18,7 +18,7 @@ def main(args):
     horizon = int(args["num_period"])
     RANK = int(args["rank"])
 
-    MEASURES = ["train_acc", "train_ll", "BIC", "test_acc", "test_ll"] + ["cov_dist_{}".format(i) for i in range(n)]
+    MEASURES = ["train_acc", "train_ll", "BIC", "test_acc", "test_ll", "cov_dist"] # + ["cov_dist_{}".format(i) for i in range(n)]
     results = np.zeros((len(FACTORS), len(MEASURES), MAXSEED))
 
     for SEED in range(MAXSEED):
@@ -39,13 +39,14 @@ def main(args):
             results[i,2,SEED] = (5+m*FACTORS[i]*(n+1)+n)*np.log(N) -2*np.array(data["train_ll"])*N
             results[i,3,SEED] = np.array(data["test_acc"])
             results[i,4,SEED] = np.array(data["test_ll"])
+            unit_dist = 0
             for unit_i in range(n):
                 dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
                 unit_cov = data["unit_{}_covariance".format(unit_i)]
-                unit_dist = correlation_matrix_distance(dgp_covariance, unit_cov)
-                results[i,4+unit_i,SEED] = unit_dist
+                unit_dist += correlation_matrix_distance(dgp_covariance, unit_cov)
+            results[i,5 ,SEED] = unit_dist / n
     
-    results = np.delete(results,20,axis=2)
+    # results = np.delete(results,20,axis=2)
     results_mu = np.round(np.mean(results, axis=2), decimals=3)
     results_std = np.round(np.std(results, axis=2) / np.sqrt(MAXSEED-1), decimals=3)
 
