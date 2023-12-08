@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import os
 import pandas as pd
-import gpytorch
 from gpytorch.mlls import VariationalELBO
 
 from scipy.stats import norm
@@ -106,6 +105,7 @@ def main():
     task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
     results = {}
     results["pop_covariance"] = task_kernel
+    results["pop_factor"] = model.pop_task_covar_module.covar_factor.data.detach().numpy()
     cov_file = "loopr_pop.npz".format(Q)
     np.savez(directory+cov_file, **results)
 
@@ -129,18 +129,42 @@ def cor_pca():
     print(pca.explained_variance_ratio_)
     vecs = pca.components_
     pca.fit(vecs)
-    vecs_2d = pca.components_
-    Items = list(Items[item_order][::4])
-    for i in range(15):
-        parts = Items[i].split(".")
-        Items[i] = parts[0]
     
     import matplotlib.pyplot as plt
+    MARKERS = ["+", "x", "*", "o", "D"]
     for i in range(5):
-        plt.plot(vecs_2d[0,i],vecs_2d[1,i], label="factor_{}".format(i))
+        plt.scatter(vecs[0,(i*4):(i*4+4)],vecs[1,(i*4):(i*4+4)], marker=MARKERS[i], label="factor_{}".format(i))
     plt.legend(loc=0)
     plt.savefig("./results/loopr/loopr_pca.pdf")
+    plt.close()
+
+def cor_factor():
+    data = np.load("./results/loopr/loopr_pop.npz")
+    print(list(data.keys()))
+    cov = data["pop_factor"]
+    data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
+    # Items = data.columns
+    # item_order = sorted(range(len(Items)), key=lambda k: Items[k])
+    # cov = cov[item_order,:]
+    
+    import matplotlib.pyplot as plt
+    plt.plot(cov[:,0],cov[:,1], "x")
+    plt.xlabel("factor 1")
+    plt.ylabel("factor 2")
+    plt.savefig("./results/loopr/loopr_factor12.pdf")
+    plt.close()
+    plt.plot(cov[:,2],cov[:,3], "x")
+    plt.xlabel("factor 3")
+    plt.ylabel("factor 4")
+    plt.savefig("./results/loopr/loopr_factor34.pdf")
+    plt.close()
+    plt.plot(cov[:,0],cov[:,4], "x")
+    plt.xlabel("factor 1")
+    plt.ylabel("factor 5")
+    plt.savefig("./results/loopr/loopr_factor15.pdf")
+    plt.close()
 
 if __name__=="__main__":
     # main()
+    # cor_factor()
     cor_pca()

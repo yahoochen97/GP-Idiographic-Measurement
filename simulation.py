@@ -189,11 +189,11 @@ def main(args):
     cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(model_type, n,m,horizon,FACTOR,SEED)
     np.savez(PATH+cov_file, **results)
 
-    # from sklearn.decomposition import PCA
-    # pca = PCA(n_components=5)
-    # pca.fit(model.pop_task_covar_module.covar_factor.data.detach().numpy())
-    # print(pca.explained_variance_ratio_)
-    # vecs = pca.components_
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=5)
+    pca.fit(results["pop_covariance"])
+    print(pca.explained_variance_ratio_)
+    vecs = pca.components_
     
     # import matplotlib.pyplot as plt
     # for i in range(5):
