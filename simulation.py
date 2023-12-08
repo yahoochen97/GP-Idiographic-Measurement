@@ -29,7 +29,7 @@ def main(args):
     model_type = args["model_type"]
     load_batch_size = 256
     num_inducing = 1000
-    num_epochs = 10
+    num_epochs = 5
 
     # load data
     print("loading data...")
@@ -56,8 +56,12 @@ def main(args):
     inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
     likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,\
                                    -2.,-1.,1.,2.,20.]))
-    # likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = OrdinalLMC(inducing_points,n,m,C,horizon, pop_rank=FACTOR, unit_rank=1, model_type=model_type)
+    
+    pop_rank = FACTOR
+    unit_rank = 1
+    if model_type=="ind":
+        unit_rank = FACTOR
+    model = OrdinalLMC(inducing_points,n,m,C,horizon, pop_rank, unit_rank, model_type)
 
     model.train()
     likelihood.train()
@@ -184,6 +188,19 @@ def main(args):
         os.makedirs(PATH)
     cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(model_type, n,m,horizon,FACTOR,SEED)
     np.savez(PATH+cov_file, **results)
+
+    # from sklearn.decomposition import PCA
+    # pca = PCA(n_components=5)
+    # pca.fit(model.pop_task_covar_module.covar_factor.data.detach().numpy())
+    # print(pca.explained_variance_ratio_)
+    # vecs = pca.components_
+    
+    # import matplotlib.pyplot as plt
+    # for i in range(5):
+    #     plt.plot(vecs[0,(i*4):(i*4+4)],vecs[1,(i*4):(i*4+4)], "x")
+    # plt.xlim([-1,1])
+    # plt.ylim([-1,1])
+    # plt.savefig("./results/pop/pop_pca.pdf")
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='-n num_unit -m num_item -t num_period -s seed -r rank -f factor')

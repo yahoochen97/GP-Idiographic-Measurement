@@ -36,7 +36,7 @@ def main(args):
             results[i,0,SEED] = np.array(data["train_acc"])
             results[i,1,SEED] = np.array(data["train_ll"])
             N = n*m*horizon*0.8
-            results[i,2,SEED] = (5+m*FACTORS[i]*(n+1)+n)*np.log(N) -2*np.array(data["train_ll"])*N
+            results[i,2,SEED] = (5+m*FACTORS[i]+n*m+n)*np.log(N) -2*np.array(data["train_ll"])*N
             results[i,3,SEED] = np.array(data["test_acc"])
             results[i,4,SEED] = np.array(data["test_ll"])
             unit_dist = 0

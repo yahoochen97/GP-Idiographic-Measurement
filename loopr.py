@@ -114,15 +114,33 @@ def main():
     item_order = sorted(range(len(Items)), key=lambda k: Items[k])
     plot_task_kernel(task_kernel[item_order,:][:,item_order], Items[item_order], file_name, SORT=False)
 
-def cor():
+def cor_pca():
+    data = np.load("./results/loopr/loopr_pop.npz")
+    print(list(data.keys()))
+    cov = data["pop_covariance"]
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items = data.columns
-    cov = data.corr().to_numpy()
-
-    file_name = "./results/loopr/loopr_cov.pdf"
     item_order = sorted(range(len(Items)), key=lambda k: Items[k])
-    plot_task_kernel(cov[item_order,:][:,item_order], Items[item_order], file_name, SORT=False)
+    cov = cov[item_order,:][:,item_order]
+
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=5)
+    pca.fit(cov)
+    print(pca.explained_variance_ratio_)
+    vecs = pca.components_
+    pca.fit(vecs)
+    vecs_2d = pca.components_
+    Items = list(Items[item_order][::4])
+    for i in range(15):
+        parts = Items[i].split(".")
+        Items[i] = parts[0]
+    
+    import matplotlib.pyplot as plt
+    for i in range(5):
+        plt.plot(vecs_2d[0,i],vecs_2d[1,i], label="factor_{}".format(i))
+    plt.legend(loc=0)
+    plt.savefig("./results/loopr/loopr_pca.pdf")
 
 if __name__=="__main__":
-    main()
-    # cor()
+    # main()
+    cor_pca()
