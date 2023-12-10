@@ -33,9 +33,8 @@ def main(args):
 
     # load data
     print("loading data...")
-    PATH = "./data/synthetic/"
-    data_file = "data_n{}_m{}_t{}_rank{}_SEED{}.csv".format(n,m,horizon,RANK,SEED)
-    data = pd.read_csv(PATH + data_file)
+    data_file = "./data/synthetic/data_n{}_m{}_t{}_rank{}_SEED{}.csv".format(n,m,horizon,RANK,SEED)
+    data = pd.read_csv(data_file)
     train_x = torch.tensor(data[["unit","item","time"]].to_numpy())
     train_y = torch.tensor(data.y)
     C = train_y.unique().size(0)
@@ -70,6 +69,13 @@ def main(args):
     for i in range(n):
         model.t_covar_module[i].lengthscale = horizon // 3 if horizon > 1 else 1
     model.fixed_module.raw_lengthscale.requires_grad = False
+
+    if model_type=="both":
+        PATH = "./results/synthetic/"
+        cov_file = "cov_pop_n{}_m{}_t{}_rank{}_SEED{}.npz".format(n,m,horizon,FACTOR,SEED)
+        if os.path.exists(PATH + cov_file):
+            tmp = np.load(PATH + cov_file)
+            model.pop_task_covar_module.covar_factor.data = torch.tensor(tmp["pop_factor"])
 
     # select parameters to learn
     if model_type=="both":
@@ -192,11 +198,11 @@ def main(args):
     cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(model_type, n,m,horizon,FACTOR,SEED)
     np.savez(PATH+cov_file, **results)
 
-    from sklearn.decomposition import PCA
-    pca = PCA(n_components=5)
-    pca.fit(results["pop_covariance"])
-    print(pca.explained_variance_ratio_)
-    vecs = pca.components_
+    # from sklearn.decomposition import PCA
+    # pca = PCA(n_components=5)
+    # pca.fit(results["pop_covariance"])
+    # print(pca.explained_variance_ratio_)
+    # vecs = pca.components_
     
     # import matplotlib.pyplot as plt
     # for i in range(5):
