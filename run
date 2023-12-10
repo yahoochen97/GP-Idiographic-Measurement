@@ -12,7 +12,7 @@ MAXSEED=25
 declare -a TYPES=("pop" "ind" "both" "graded_multi" "gpcm_multi" "sequential_multi")
 declare -a FACTORS=(5)
 
-declare -a TYPES=("both")
+declare -a TYPES=("pop")
 if [ $1 = "run" ]
 then
     for SEED in $(seq 1 1 $MAXSEED); do

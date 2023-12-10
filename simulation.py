@@ -29,7 +29,7 @@ def main(args):
     model_type = args["model_type"]
     load_batch_size = 256
     num_inducing = 1000
-    num_epochs = 1
+    num_epochs = 10
 
     # load data
     print("loading data...")
