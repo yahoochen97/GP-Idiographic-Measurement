@@ -29,7 +29,7 @@ def main(args):
     model_type = args["model_type"]
     load_batch_size = 256
     num_inducing = 1000
-    num_epochs = 5
+    num_epochs = 1
 
     # load data
     print("loading data...")
@@ -70,6 +70,8 @@ def main(args):
     for i in range(n):
         model.t_covar_module[i].lengthscale = horizon // 3 if horizon > 1 else 1
     model.fixed_module.raw_lengthscale.requires_grad = False
+
+    # select parameters to learn
     if model_type=="both":
         # model.task_weights_module.weights = 0.5*torch.ones((n))
         # model.task_weights_module.raw_weights.requires_grad = True
@@ -152,6 +154,7 @@ def main(args):
     if model_type!="ind":
         task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
         results["pop_covariance"] = task_kernel
+        results["pop_factor"] = model.pop_task_covar_module.covar_factor.data.detach().numpy()
         dgp_pop_loadings = dgp_loadings["pop_loadings"]
         dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings
         pop_dist = correlation_matrix_distance(dgp_covariance, results["pop_covariance"])
