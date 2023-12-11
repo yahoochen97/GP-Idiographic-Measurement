@@ -472,9 +472,12 @@ class OrdinalLMC(ApproximateGP):
         # individual item covaraince
         self.unit_mask_covar_module = ModuleList([UnitMaskKernel(n=i) \
                     for i in range(n)])
-        if model_type!="pop":
+        if model_type=="both":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
                     rank=unit_rank, prior=NormalPrior(0.,1)) for i in range(n)])
+        elif model_type=="ind":
+            self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
+                    rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])
            
         # weights for populational and individual covariance, 1 means pop, 0 means ind
         # self.task_weights_module = WeightKernel(input_size=torch.Size([n]))

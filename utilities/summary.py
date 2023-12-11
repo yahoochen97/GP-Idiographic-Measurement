@@ -6,7 +6,7 @@ import pyreadr
 
 from util import correlation_matrix_distance, plot_task_kernel
 
-MODELS = ["pop", "ind", "both","graded_multi",\
+MODELS = ["pop", "ind", "both","graded_uni",\
            "gpcm_multi", "sequential_multi"]
 
 RESULT_PATH = "./results/synthetic/"
@@ -28,11 +28,9 @@ def main(args):
         
         dgp_loadings = np.load(DGP_PATH + loading_file)
         dgp_pop_loadings = dgp_loadings["pop_loadings"]
-        dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings
         dgp_unit_loadings = dgp_loadings["unit_loadings"]
         for i in range(len(MODELS)):
             if i<3:
-                
                 cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(MODELS[i], n,m,horizon,RANK,SEED_)
                 data = np.load(RESULT_PATH + cov_file)
             else:
@@ -45,7 +43,12 @@ def main(args):
             results[i,3,SEED] = np.array(data["test_ll"])
             unit_dist = 0
             for unit_i in range(n):
-                dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
+                if i==0:
+                    dgp_covariance = dgp_pop_loadings.T + dgp_unit_loadings[unit_i].T
+                    dgp_covariance = dgp_covariance @ dgp_covariance.T
+                else:
+                    dgp_covariance = dgp_pop_loadings.T  @ dgp_pop_loadings + \
+                        dgp_unit_loadings[unit_i].T @ dgp_unit_loadings[unit_i]
                 if i<3:
                     unit_cov = data["unit_{}_covariance".format(unit_i)]
                 else:

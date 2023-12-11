@@ -70,36 +70,34 @@ def main(args):
         model.t_covar_module[i].lengthscale = horizon // 3 if horizon > 1 else 1
     model.fixed_module.raw_lengthscale.requires_grad = False
 
-    if model_type=="both":
+    if model_type!="pop":
         PATH = "./results/synthetic/"
         cov_file = "cov_pop_n{}_m{}_t{}_rank{}_SEED{}.npz".format(n,m,horizon,FACTOR,SEED)
         if os.path.exists(PATH + cov_file):
             tmp = np.load(PATH + cov_file)
-            model.pop_task_covar_module.covar_factor.data = torch.tensor(tmp["pop_factor"])
+            if model_type=="both":
+                model.pop_task_covar_module.covar_factor.data = torch.tensor(tmp["pop_factor"])
+            elif model_type=="ind":
+                print("loading factors...")
+                for i in range(n):
+                    model.unit_task_covar_module[i].covar_factor.data = torch.tensor(tmp["pop_factor"])
 
     # select parameters to learn
     if model_type=="both":
-        # model.task_weights_module.weights = 0.5*torch.ones((n))
-        # model.task_weights_module.raw_weights.requires_grad = True
         final_params = list(set(model.parameters()) - \
                     {model.fixed_module.raw_lengthscale}) + \
             list(likelihood.parameters())
     else:
-        # model.task_weights_module.raw_weights.requires_grad = False
         if model_type=="pop":
-            # model.task_weights_module.weights = torch.ones((n))
             final_params = list(set(model.parameters()) - \
-                        {model.fixed_module.raw_lengthscale,\
-                        # model.task_weights_module.raw_weights,\
+                        {model.fixed_module.raw_lengthscale\
                         }) + \
                        list(likelihood.parameters())
         elif model_type=="ind":
-            # model.task_weights_module.weights = torch.zeros((n))
             model.pop_task_covar_module.raw_var.requires_grad = False
             model.pop_task_covar_module.covar_factor.requires_grad = False
             final_params = list(set(model.parameters()) - \
                         {model.fixed_module.raw_lengthscale,\
-                        # model.task_weights_module.raw_weights,\
                         model.pop_task_covar_module.raw_var,
                         model.pop_task_covar_module.covar_factor}) + \
                         list(likelihood.parameters())
@@ -167,8 +165,6 @@ def main(args):
         print("pop dist: {}".format(pop_dist))
 
     unit_covariance = np.zeros((n,m,m))
-    # weights = model.task_weights_module.weights.detach().numpy()
-    # results["weights"] = weights
     dgp_unit_loadings = dgp_loadings["unit_loadings"]
     dgp_pop_loadings = dgp_loadings["pop_loadings"]
     for i in range(n):
@@ -181,15 +177,8 @@ def main(args):
         results["unit_{}_covariance".format(i)] = task_kernel
         dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
         unit_dist = correlation_matrix_distance(dgp_covariance, unit_covariance[i])
-        # if model_type!="pop":
-        #     print("unit {} dist: {}".format(i, correlation_matrix_distance(\
-        #         dgp_pop_loadings.T @ dgp_pop_loadings,
-        #         model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy())))
         print("unit {} dist: {}".format(i, unit_dist))
         # plot_task_kernel(dgp_covariance, np.arange(m), "./data/synthetic/dgp_{}.pdf".format(i), SORT=False)
-        # loading_scales, unit_loadings = np.linalg.eig(task_kernel)
-        # loading_idx = np.argpartition(loading_scales, -RANK)[-RANK:]
-        # loading_scales[loading_idx] * unit_loadings[:,loading_idx]
         # plot_task_kernel(unit_covariance[i], np.arange(m), "./data/synthetic/est_{}.pdf".format(i), SORT=False)
 
     PATH = "./results/synthetic/"

@@ -41,7 +41,8 @@ def main(args):
             results[i,4,SEED] = np.array(data["test_ll"])
             unit_dist = 0
             for unit_i in range(n):
-                dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
+                dgp_covariance = dgp_pop_loadings.T  @ dgp_pop_loadings + \
+                    dgp_unit_loadings[unit_i].T @ dgp_unit_loadings[unit_i]
                 unit_cov = data["unit_{}_covariance".format(unit_i)]
                 unit_dist += correlation_matrix_distance(dgp_covariance, unit_cov)
             results[i,5 ,SEED] = unit_dist / n
