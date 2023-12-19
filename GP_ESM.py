@@ -21,7 +21,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 def main():
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 10
+    num_epochs = 1
     model_type="both"
     print("loading data...")
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
@@ -40,7 +40,7 @@ def main():
     # read data
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     data.columns = [x.replace(" ", "") for x in data.columns]
-    # data = data[data.PID<=10]
+    data = data[data.PID<=10]
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
     reverse_code = np.array(reverse_code).reshape(-1,1)
