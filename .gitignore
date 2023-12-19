@@ -1,6 +1,14 @@
 __pycache__
 .vscode/
-results/
+results/synthetic
 .DS_*
+*.pdf
+*.pth
+*.zip
+results/pop
+results/item_corrs
+results/ind
+results/both
 data/synthetic/
 *GIMME*
+*.Rhistory
