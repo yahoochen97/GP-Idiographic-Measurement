@@ -36,5 +36,5 @@ then
     python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
 fi
 
-
 # bsub -G SEAS-Lab-Garnett -o "log/loopr.log" -J "loopr" "module add seas-lab-vorobeychik;python loopr.py"
+# bsub -G SEAS-Lab-Garnett -o "log/GP_ESM.log" -J "GP_ESM" "module add seas-lab-vorobeychik;python GP_ESM.py"
