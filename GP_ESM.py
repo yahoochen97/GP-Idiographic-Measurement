@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import os
 import pandas as pd
+import matplotlib.pylab as plt
 from gpytorch.mlls import VariationalELBO
 
 from scipy.stats import norm
@@ -21,8 +22,8 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 def main():
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 10
-    model_type="both"
+    num_epochs = 5
+    model_type = "both"
     print("loading data...")
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -158,10 +159,146 @@ def main():
     PATH = "./results/GP_ESM/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
-    np.savez(PATH+"pop_5.npz", **results)
+    np.savez(PATH+"both_5.npz", **results)
 
-    item_order = sorted(range(len(ESM_items)), key=lambda k: ESM_items[k])
-    plot_task_kernel(task_kernel[item_order,:][:,item_order], np.array(ESM_items)[item_order], "./results/GP_ESM/pop_5.pdf", SORT=False)
+def plot_unit_cor_matrix():
+    PATH = "./results/GP_ESM/"
+    results = np.load(PATH+"both_5.npz")
+
+    data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
+    Items_loopr = data.columns.to_list()
+
+    # rename volat to violat
+    for i in range(1,5):
+        Items_loopr[Items_loopr.index("Volat.{}".format(i))] = "Violat.{}".format(i)
+
+    # generate item map from original to current using ESM codebook
+    codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
+    ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
+    data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+    n = data.PID.unique().shape[0]
+
+    all_cov = np.zeros((n,len(ESM_items),len(ESM_items)))
+    # item_order = sorted(range(len(ESM_items)), key=lambda k: ESM_items[k])
+    # plot populational kernel
+    pop_task_kernel = results["pop_covariance"]
+    plot_task_kernel(pop_task_kernel, np.array(ESM_items), "./results/GP_ESM/both_5.pdf", SORT=False)
+    # plot individual kernel
+    for i in range(n):
+        ind_task_kernel = results["unit_{}_covariance".format(i)]
+        all_cov[i] = ind_task_kernel
+        plot_task_kernel(ind_task_kernel, \
+                         np.array(ESM_items), \
+                        "./results/GP_ESM/both_unit_cov/both_unit_{}_5.pdf".format(i), SORT=False)
+        
+        plot_task_kernel(ind_task_kernel - pop_task_kernel, \
+                         np.array(ESM_items), \
+                        "./results/GP_ESM/both_ind_cov/both_ind_{}_5.pdf".format(i), SORT=False)
+
+    # iterate over all pairs of items
+    for p in range(15):
+        for q in range(p+1,15):
+            item_cov = all_cov[:,(3*p):(3*p+3), (3*q):(3*q+3)]
+            # 3 by 3 figures of individual level covariances
+            plt.close()
+            fig, axs = plt.subplots(3,3)
+            for i in range(3):
+                for j in range(3):
+                    axs[i,j].boxplot(item_cov[:,i,j])
+                    axs[i,j].set_ylim([-1.5,1.5])
+                    axs[i,j].set_xticks([])
+
+            for i in range(3):
+                axs[i,0].set_ylabel(ESM_items[q*3+i])
+                axs[i,0].get_yaxis().set_label_coords(-0.2,0.5)
+            for j in range(3):
+                axs[2,j].set_xlabel(ESM_items[p*3+j])
+                    
+            parts1 = ESM_items[p*3].split(".")
+            parts1 = parts1[0]
+            parts2 = ESM_items[q*3].split(".")
+            parts2 = parts2[0]
+            plt.savefig("./results/GP_ESM/both_pair_item/" + parts1 + "_" + parts2 + ".pdf", bbox_inches='tight')
+
+def SEM():
+    PATH = "./results/GP_ESM/"
+    results = np.load(PATH+"both_5.npz")
+
+    data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
+    Items_loopr = data.columns.to_list()
+
+    # rename volat to violat
+    for i in range(1,5):
+        Items_loopr[Items_loopr.index("Volat.{}".format(i))] = "Violat.{}".format(i)
+
+    # generate item map from original to current using ESM codebook
+    codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
+    ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
+    SEM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") not in Items_loopr]
+    
+    data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+    SEM_items_abbr = codebook[codebook.Original_Item_Name.isin(SEM_items)].Current_Variable_Name.to_list()
+    data = data[SEM_items_abbr + ['RecordedDate', 'PID']]
+    for j in range(len(ESM_items)):
+        data["x_{}".format(j)] = 0
+
+    n = data.PID.unique().shape[0]
+    recordeddates = data.RecordedDate.unique()
+    horizon = recordeddates.shape[0]
+    for i in range(1):
+        task_kernel = results["unit_{}_covariance".format(i)]
+        U, S, _ = np.linalg.svd(task_kernel)
+
+        for h in range(horizon):
+            mask = (data.PID==i) & (data.RecordedDate==recordeddates[h])
+            if data[mask].shape[0]>0:
+                for j in range(len(ESM_items)):
+                    data[mask, "x_{}".format(j)] = 0
+
+def cluster_analysis():
+    PATH = "./results/GP_ESM/"
+    results = np.load(PATH+"both_5.npz")
+
+    data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
+    Items_loopr = data.columns.to_list()
+
+    # rename volat to violat
+    for i in range(1,5):
+        Items_loopr[Items_loopr.index("Volat.{}".format(i))] = "Violat.{}".format(i)
+
+    # generate item map from original to current using ESM codebook
+    codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
+    ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
+    data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+    n = data.PID.unique().shape[0]
+
+    # plot populational kernel
+    pop_task_kernel = results["pop_covariance"]
+    # plot individual kernel
+    unit_cov_evs = np.zeros((n,5))
+    discrepancy_pop = np.zeros((n,))
+    all_cov = np.zeros((n,len(ESM_items),len(ESM_items)))
+    for i in range(n):
+        ind_task_kernel = results["unit_{}_covariance".format(i)]
+        all_cov[i] = ind_task_kernel
+        eigv = np.linalg.eigvals(ind_task_kernel)
+        eigv = np.sort(eigv)[::-1]
+        unit_cov_evs[i] = eigv[0:5]
+        print(unit_cov_evs[i])
+        discrepancy_pop[i] = correlation_matrix_distance(pop_task_kernel, ind_task_kernel)
+
+    print(discrepancy_pop)
+
+    from utilities.util import matrix_cluster, matrix_kmeans
+    matrix_cluster(all_cov, max_K=10)
+    K = 5
+    centroids, assignments, dists = matrix_kmeans(all_cov, K=K)
+    for k in range(K):
+        print("cluster {}: ".format(k+1))
+        print(np.arange(1,n+1)[assignments==k])
 
 if __name__=="__main__":
     main()
+    plot_unit_cor_matrix()
+    cluster_analysis()
+    # SEM()

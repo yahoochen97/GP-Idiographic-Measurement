@@ -474,7 +474,7 @@ class OrdinalLMC(ApproximateGP):
                     for i in range(n)])
         if model_type=="both":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
-                    rank=unit_rank, prior=NormalPrior(0.,1)) for i in range(n)])
+                    rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])
         elif model_type=="ind":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
                     rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])
@@ -541,19 +541,102 @@ class OrdinalLMC(ApproximateGP):
     
 import seaborn as sns
 import matplotlib.pylab as plt
+import matplotlib.patches as mpatch
 plt.switch_backend('agg')
 import numpy as np
 
 def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
     plt.figure(figsize=(12, 10))
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
     if SORT:
         kernel_order = np.argsort(np.diag(task_kernel))
         task_kernel = task_kernel[kernel_order,:][:,kernel_order]
         item_names = item_names[kernel_order]
-    colormap = sns.color_palette("RdBu_r") 
+    colormap = sns.color_palette("PuOr_r") 
+    norm = plt.Normalize(-2.5,2.5)
     sns.heatmap(task_kernel,yticklabels=item_names, xticklabels=item_names, \
-                 cmap=colormap) 
-    plt.savefig(file_name)
+                 cmap=colormap, norm=norm)
+    
+    categories = [r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Extraversion}}$",
+                  r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Agreeableness}}$",
+                  r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Conscientiousness}}$",
+                  r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Negative Emotionality}}$",
+                  r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Open-Mindedness}}$"]
+    for i in range(5):
+        plt.text(9*i+4.5, 50.3, categories[i], ha='center')
+
+    categories = ["Extraversion",
+                  "Agreeableness",
+                  "Conscientiousness",
+                  "Negative Emotionality",
+                  "Open-Mindedness"]
+    
+    for i in range(5):
+        plt.text(-5.6, 9*i+4.5, categories[i], va='center', rotation=90, fontsize=10)
+        plt.text(-4.9, 9*i+4.5, r"$\overbrace{\hspace{10.5em}}$", va='center', rotation=90)
+    plt.savefig(file_name, bbox_inches='tight')
+
+def matrix_cluster(matrices, max_K=10):
+    centroids = None
+    assignments = None
+    dists = np.zeros(max_K)
+    for k in range(1,max_K+1):
+        print("running k-means for {} clusters...".format(k))
+        centroids, assignments, dists_ = matrix_kmeans(matrices, k)
+        dists[k-1] = np.linalg.norm(dists_)
+        print("Averaged distances of {} means: {}".format(k+1, dists[k-1]))
+    
+    plt.figure(figsize=(12, 10))
+    plt.plot(np.arange(1,max_K+1), dists)
+    plt.ylim([0,np.max(dists)*1.1])
+    plt.xlabel("num of clusters")
+    plt.ylabel("Averaged dist")
+    plt.savefig("./results/GP_ESM/kmean_dists.pdf", bbox_inches='tight')
+
+def matrix_kmeans(matrices, K):
+    '''
+        K-means algorithms for correlation matrix
+        Inputs:
+            - matrices: list/array of matrices
+            - K: number of clustering
+        Outputs:
+            - centroids: list/array of centroids
+            - assignments: clustering assignments
+            - dists: distances to centroids
+    '''
+    n = matrices.shape[0]
+    d = matrices.shape[1]
+    dist = np.zeros(n,)
+    for i in range(n):
+        dist[i] = correlation_matrix_distance(matrices[i], matrices[0])
+    centroids = matrices[np.argpartition(dist, -K)[-K:]]
+
+    # centroids = np.random.normal(size=(K,d,d))
+    assignments = np.zeros((n,)).astype(int)
+    dists = np.zeros(n,)
+
+    while True:
+        # update assignments
+        new_assignments = np.zeros((n,)).astype(int)
+        for i in range(n):
+            dist = np.zeros(K,)
+            for k in range(K):
+                dist[k] = correlation_matrix_distance(matrices[i], centroids[k])
+            new_assignments[i] = int(np.argmin(dist))
+            dists[i] = dist[new_assignments[i]]
+
+        if np.linalg.norm(new_assignments-assignments)==0:
+            break
+        else:
+            assignments = new_assignments
+
+        # update centroids
+        for k in range(K):
+            centroids[k] = np.mean(matrices[assignments==k], axis=0)
+
+    return centroids, assignments, dists
+
 
 def correlation_matrix_distance(r1,r2):
     return 1 - np.trace(r1 @ r2) / np.linalg.norm(r1) / np.linalg.norm(r2)
