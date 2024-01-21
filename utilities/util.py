@@ -545,6 +545,14 @@ import matplotlib.patches as mpatch
 plt.switch_backend('agg')
 import numpy as np
 
+def cov_to_corr(cov):
+    '''
+        Transform covariance matrix to correlation matrix
+    '''
+    Dinv = np.diag(1 / np.sqrt(np.diag(cov)))
+    corr = Dinv @ cov @ Dinv
+    return corr
+
 def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
     plt.figure(figsize=(12, 10))
     plt.rcParams['text.usetex'] = True
@@ -553,8 +561,12 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
         kernel_order = np.argsort(np.diag(task_kernel))
         task_kernel = task_kernel[kernel_order,:][:,kernel_order]
         item_names = item_names[kernel_order]
-    colormap = sns.color_palette("PuOr_r") 
-    norm = plt.Normalize(-2.5,2.5)
+
+    # cov to corr
+    task_kernel = cov_to_corr(task_kernel)    
+    
+    colormap = "PuOr_r" 
+    norm = plt.Normalize(-1.0,1.0)
     sns.heatmap(task_kernel,yticklabels=item_names, xticklabels=item_names, \
                  cmap=colormap, norm=norm)
     
@@ -563,8 +575,12 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
                   r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Conscientiousness}}$",
                   r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Negative Emotionality}}$",
                   r"$\stackrel{\underbrace{\hspace{10.5em}}}{\text{Open-Mindedness}}$"]
+    m = task_kernel.shape[0]
     for i in range(5):
-        plt.text(9*i+4.5, 50.3, categories[i], ha='center')
+        if m==45:
+            plt.text(9*i+4.5, 50.3, categories[i], ha='center')
+        else:
+            plt.text(12*i+5.5, 67.2, categories[i], ha='center')
 
     categories = ["Extraversion",
                   "Agreeableness",
@@ -573,25 +589,32 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
                   "Open-Mindedness"]
     
     for i in range(5):
-        plt.text(-5.6, 9*i+4.5, categories[i], va='center', rotation=90, fontsize=10)
-        plt.text(-4.9, 9*i+4.5, r"$\overbrace{\hspace{10.5em}}$", va='center', rotation=90)
+        if m==45:
+            plt.text(-5.6, 9*i+4.5, categories[i], va='center', rotation=90, fontsize=10)
+            plt.text(-4.9, 9*i+4.5, r"$\overbrace{\hspace{10.5em}}$", va='center', rotation=90)
+        else:
+            plt.text(-7.2, 12*i+5.5, categories[i], va='center', rotation=90, fontsize=10)
+            plt.text(-6.4, 12*i+5.5, r"$\overbrace{\hspace{10.5em}}$", va='center', rotation=90)
     plt.savefig(file_name, bbox_inches='tight')
 
 def matrix_cluster(matrices, max_K=10):
     centroids = None
     assignments = None
-    dists = np.zeros(max_K)
+    plt.figure(figsize=(12, 10))
+    dists = np.zeros((matrices.shape[0], max_K))
     for k in range(1,max_K+1):
         print("running k-means for {} clusters...".format(k))
         centroids, assignments, dists_ = matrix_kmeans(matrices, k)
-        dists[k-1] = np.linalg.norm(dists_)
-        print("Averaged distances of {} means: {}".format(k+1, dists[k-1]))
+        dists[:,k-1] = np.sum(dists_**2)
+        print("WCSS of {} means: {}".format(k, np.mean(dists[:,k-1])))
+        # np.arange(1,max_K+1), 
     
-    plt.figure(figsize=(12, 10))
-    plt.plot(np.arange(1,max_K+1), dists)
+    df = pd.DataFrame(data = dists, columns = [str(i) for i in range(1,max_K+1)])
+    plt.plot(np.arange(1,max_K+1), np.mean(dists,axis=0))
+    plt.xticks(np.arange(1,max_K+1))
     plt.ylim([0,np.max(dists)*1.1])
     plt.xlabel("num of clusters")
-    plt.ylabel("Averaged dist")
+    plt.ylabel("within-cluster sum of square")
     plt.savefig("./results/GP_ESM/kmean_dists.pdf", bbox_inches='tight')
 
 def matrix_kmeans(matrices, K):
@@ -611,6 +634,8 @@ def matrix_kmeans(matrices, K):
     for i in range(n):
         dist[i] = correlation_matrix_distance(matrices[i], matrices[0])
     centroids = matrices[np.argpartition(dist, -K)[-K:]]
+    # np.random.seed(12345+K)
+    # centroids = matrices[np.random.choice(range(n), size=K, replace=False)]
 
     # centroids = np.random.normal(size=(K,d,d))
     assignments = np.zeros((n,)).astype(int)

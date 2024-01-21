@@ -2,6 +2,7 @@
 import numpy as np
 import torch
 import os
+import argparse
 import pandas as pd
 from gpytorch.mlls import VariationalELBO
 
@@ -18,12 +19,13 @@ from torch.utils.data import TensorDataset, DataLoader
 from utilities.util import OrdinalLMC, OrdinalLikelihood
 from utilities.util import correlation_matrix_distance, plot_task_kernel, evaluate_gpr
 
-def main():
+def main(args):
+    FACTOR = int(args["factor"])
+    model_type = args["model_type"]
     # load data
     load_batch_size = 512
     num_inducing = 60
-    num_epochs = 10
-    model_type="pop"
+    num_epochs = int(args["epoch"])
     print("loading data...")
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
 
@@ -31,7 +33,6 @@ def main():
     m = data.shape[1]
     Items = data.columns
     horizon = 1
-    Q = 5
     C = 5
 
     # x: [i,j,h]
@@ -53,16 +54,18 @@ def main():
     # initialize likelihood and model
     
     inducing_points = train_x[:num_inducing,:]
-    likelihood = OrdinalLikelihood(thresholds=torch.tensor([-5.,-2.,-1.,1.,2.,5.]))
-    model = OrdinalLMC(inducing_points,n=1,m=m,C=C,horizon=horizon,pop_rank=Q, model_type=model_type)
+    # inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
+    likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
+    pop_rank = FACTOR
+    model = OrdinalLMC(inducing_points,n=1,m=m,C=C,horizon=horizon,pop_rank=pop_rank, model_type=model_type)
 
     model.train()
     likelihood.train()
 
     # initialize covariance of pop factors
     cov = torch.tensor(data.corr().to_numpy())
-    _, _, V = torch.pca_lowrank(cov, q = Q)
-    model.pop_task_covar_module.covar_factor.data = 4*torch.matmul(cov, V[:,:Q])
+    _, _, V = torch.pca_lowrank(cov, q = FACTOR)
+    model.pop_task_covar_module.covar_factor.data = 4*torch.matmul(cov, V[:,:FACTOR])
 
     # fix time length scale
     for i in range(1):
@@ -73,8 +76,11 @@ def main():
                        list(likelihood.parameters())
 
     # Our loss object. We're using the VariationalELBO
-    optimizer = torch.optim.Adam(final_params, lr=0.1)
+    optimizer = torch.optim.Adam(final_params, lr=0.01)
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
+
+    num_params = 5 + m*FACTOR + m + 1 # likelihood + multi task + noise
+    print("num of model parameters: {}".format(num_params))
 
     # train GPR
     print("start training...")
@@ -104,14 +110,32 @@ def main():
 
     task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
     results = {}
+    log_lik = train_ll * train_x.size(0)
+    results["train_acc"] = train_acc
+    results["train_ll"] = train_ll
+    results["BIC"] = num_params*np.log(train_x.size(0)) - 2*log_lik 
     results["pop_covariance"] = task_kernel
     results["pop_factor"] = model.pop_task_covar_module.covar_factor.data.detach().numpy()
-    cov_file = "loopr_pop.npz".format(Q)
+    cov_file = "loopr_pop_f{}_e{}.npz".format(FACTOR, num_epochs)
     np.savez(directory+cov_file, **results)
 
-    # task_kernel = np.clip(task_kernel,-4,4) / 4
-    file_name = directory + "/loopr_pop.pdf"
-    item_order = sorted(range(len(Items)), key=lambda k: Items[k])
+    file_name = directory + "/loopr_pop_f{}_e{}.pdf".format(FACTOR, num_epochs)
+    item_order = ["Sociab.1", "Sociab.2", "Sociab.3", "Sociab.4",
+                  "Assert.1", "Assert.2", "Assert.3", "Assert.4",
+                  "Energy.1", "Energy.2", "Energy.3", "Energy.4",
+                  "Compass.1", "Compass.2", "Compass.3", "Compass.4",
+                  "Respect.1", "Respect.2", "Respect.3", "Respect.4",
+                  "Trust.1", "Trust.2", "Trust.3", "Trust.4",
+                  "Organiz.1", "Organiz.2", "Organiz.3", "Organiz.4",
+                  "Product.1", "Product.2", "Product.3", "Product.4",
+                  "Respons.1", "Respons.2", "Respons.3", "Respons.4",
+                  "Anxiety.1", "Anxiety.2", "Anxiety.3", "Anxiety.4",
+                  "Depres.1", "Depres.2", "Depres.3", "Depres.4",
+                  "Volat.1", "Volat.2", "Volat.3", "Volat.4",
+                  "Curious.1", "Curious.2", "Curious.3", "Curious.4",
+                  "Aesth.1", "Aesth.2", "Aesth.3", "Aesth.4",
+                  "Creativ.1","Creativ.2","Creativ.3","Creativ.4"]
+    item_order = [Items.to_list().index(item) for item in item_order]
     plot_task_kernel(task_kernel[item_order,:][:,item_order], Items[item_order], file_name, SORT=False)
 
 def cor_pca():
@@ -164,7 +188,27 @@ def cor_factor():
     plt.savefig("./results/loopr/loopr_factor15.pdf")
     plt.close()
 
+def model_comparison():
+    PATH = "./results/loopr/"
+    FACTORS = [2,5]
+    for i in range(len(FACTORS)):
+        results = np.load(PATH+"loopr_pop_f{}_e5.npz".format(FACTORS[i]))
+        BIC = results["BIC"]
+        train_acc = results["train_acc"]
+        train_ll = results["train_ll"]
+        print("loopr factor {}".format(FACTORS[i]))
+        print(train_ll)
+        print(BIC)
+        print(train_acc)
+
+
 if __name__=="__main__":
-    # main()
+    parser = argparse.ArgumentParser(description='-k model_type -f factor -e epoch')
+    parser.add_argument('-k','--model_type', help='type of model', required=False)
+    parser.add_argument('-e','--epoch', help='num of training epochs', required=False)
+    parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
+    args = vars(parser.parse_args())
+    main(args)
     # cor_factor()
-    cor_pca()
+    # cor_pca()
+    # model_comparison()

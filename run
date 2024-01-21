@@ -34,6 +34,16 @@ elif [ $1 = "summary" ]
 then
     python utilities/summary.py -n 10 -m 20 -t 30 -r 5 -s 25
     python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
+elif [ $1 = "loopr" ]
+then
+    declare -a FACTORS=(2 5)
+    declare -a EPOCHS=(0 5)
+    TYPE="pop"
+    for EPOCH in ${EPOCHS[@]}; do
+        for FACTOR in ${FACTORS[@]}; do
+            python loopr.py -k $TYPE -f $FACTOR -e $EPOCH
+        done
+    done
 fi
 
 # bsub -G SEAS-Lab-Garnett -o "log/loopr.log" -J "loopr" "module add seas-lab-vorobeychik;python loopr.py"

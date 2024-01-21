@@ -2,6 +2,7 @@
 import numpy as np
 import torch
 import os
+import argparse
 import pandas as pd
 import matplotlib.pylab as plt
 from gpytorch.mlls import VariationalELBO
@@ -19,11 +20,12 @@ from torch.utils.data import TensorDataset, DataLoader
 from utilities.util import OrdinalLMC, OrdinalLikelihood
 from utilities.util import correlation_matrix_distance, plot_task_kernel, evaluate_gpr
 
-def main():
+def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 5
-    model_type = "both"
+    num_epochs = 10
+    FACTOR = int(args["factor"])
+    model_type = args["model_type"]
     print("loading data...")
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -72,21 +74,24 @@ def main():
 
     # build data loader
     C = 5
-    Q = 5
     train_dataset = TensorDataset(train_x, train_y)
     train_loader = DataLoader(train_dataset, batch_size=load_batch_size, shuffle=True)
 
     # initialize likelihood and model
     inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
     likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
+    pop_rank = FACTOR
+    unit_rank = 1
+    if model_type=="ind":
+        unit_rank = FACTOR
     model = OrdinalLMC(inducing_points,n=n,m=m,C=C,horizon=horizon,\
-                    pop_rank=Q, unit_rank=1, model_type=model_type)
+                    pop_rank=pop_rank, unit_rank=unit_rank, model_type=model_type)
 
     model.train()
     likelihood.train()
 
     # initialize covariance of pop factors
-    pop_prior = np.load("./results/loopr/loopr_pop.npz")
+    pop_prior = np.load("./results/loopr/loopr_pop_f5_e5.npz")
     loopr_idx = [Items_loopr.index(x) for x in ESM_items]
     model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
     # reverse_code
@@ -174,6 +179,12 @@ def plot_unit_cor_matrix():
 
     # generate item map from original to current using ESM codebook
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
+    reverse_code = codebook.iloc[:,2].to_list()
+    reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
+    reverse_code = np.array(reverse_code).reshape(-1,1)
+    reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
+    reverse_mask[reverse_code==1,:] *= -1
+    reverse_mask[:,reverse_code==1] *= -1
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     n = data.PID.unique().shape[0]
@@ -182,10 +193,12 @@ def plot_unit_cor_matrix():
     # item_order = sorted(range(len(ESM_items)), key=lambda k: ESM_items[k])
     # plot populational kernel
     pop_task_kernel = results["pop_covariance"]
+    pop_task_kernel = pop_task_kernel * reverse_mask
     plot_task_kernel(pop_task_kernel, np.array(ESM_items), "./results/GP_ESM/both_5.pdf", SORT=False)
     # plot individual kernel
     for i in range(n):
         ind_task_kernel = results["unit_{}_covariance".format(i)]
+        ind_task_kernel = ind_task_kernel * reverse_mask
         all_cov[i] = ind_task_kernel
         plot_task_kernel(ind_task_kernel, \
                          np.array(ESM_items), \
@@ -268,37 +281,132 @@ def cluster_analysis():
 
     # generate item map from original to current using ESM codebook
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
+    reverse_code = codebook.iloc[:,2].to_list()
+    reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
+    reverse_code = np.array(reverse_code).reshape(-1,1)
+    reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
+    reverse_mask[reverse_code==1,:] *= -1
+    reverse_mask[:,reverse_code==1] *= -1
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     n = data.PID.unique().shape[0]
 
     # plot populational kernel
     pop_task_kernel = results["pop_covariance"]
+    pop_task_kernel = pop_task_kernel * reverse_mask
     # plot individual kernel
     unit_cov_evs = np.zeros((n,5))
     discrepancy_pop = np.zeros((n,))
     all_cov = np.zeros((n,len(ESM_items),len(ESM_items)))
     for i in range(n):
         ind_task_kernel = results["unit_{}_covariance".format(i)]
+        ind_task_kernel = ind_task_kernel * reverse_mask
         all_cov[i] = ind_task_kernel
         eigv = np.linalg.eigvals(ind_task_kernel)
         eigv = np.sort(eigv)[::-1]
-        unit_cov_evs[i] = eigv[0:5]
-        print(unit_cov_evs[i])
+        unit_cov_evs[i] = np.around(eigv[0:5]/np.sum(eigv[0:5]), decimals=3)
         discrepancy_pop[i] = correlation_matrix_distance(pop_task_kernel, ind_task_kernel)
 
-    print(discrepancy_pop)
-
+    # k mean clustering
     from utilities.util import matrix_cluster, matrix_kmeans
     matrix_cluster(all_cov, max_K=10)
-    K = 5
+    K = 8
     centroids, assignments, dists = matrix_kmeans(all_cov, K=K)
+    # plot centroids
+    directory = "./results/GP_ESM/centroids/"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    for k in range(K):
+            plot_task_kernel(centroids[k], \
+                    np.array(ESM_items), \
+                    directory + "centroid_{}_5.pdf".format(k), SORT=False)
+    centroids_dist =  np.zeros((K,K))       
+    for k in range(K):
+        for k_ in range(K):
+            centroids_dist[k, k_] = correlation_matrix_distance(centroids[k], centroids[k_])
+    centroids_dist = np.around(centroids_dist, decimals=2)
+    print(centroids_dist)
+
+    discrepancy_pop = pd.DataFrame({"dist": discrepancy_pop,\
+                                    "unit": np.arange(1,n+1),\
+                                    "cluster": assignments})
+    for i in range(5):
+        discrepancy_pop["eig_{}".format(i+1)] = unit_cov_evs[:,i]
+
+    discrepancy_pop.sort_values(by=["cluster", "dist"], inplace=True)
+    COLORS = ["#d7191c", '#fdae61', '#ffffbf', '#abd9e9', '#2c7bb6']
+    COLORS = ['#1b9e77',
+            '#d95f02',
+            '#7570b3',
+            '#e7298a',
+            '#66a61e']
+    COLORS = ['#d73027',
+            '#f46d43',
+            '#fdae61',
+            '#fee090',
+            '#e0f3f8',
+            '#abd9e9',
+            '#74add1',
+            '#4575b4']
     for k in range(K):
         print("cluster {}: ".format(k+1))
         print(np.arange(1,n+1)[assignments==k])
+ 
+    # Add empty bars to the end of each group
+    PAD = 1
+    ANGLES_N = n + PAD * K
+    ANGLES = np.linspace(0, 2 * np.pi, num=ANGLES_N, endpoint=False) 
+    # Obtain size of each group
+    GROUPS_SIZE = [len(i[1]) for i in discrepancy_pop.groupby("cluster")]
+    offset = 0
+    IDXS = []
+    for size in GROUPS_SIZE:
+        IDXS += list(range(offset + PAD, offset + size + PAD))
+        offset += size + PAD
+    COLORS_ = [COLORS[i] for i, size in enumerate(GROUPS_SIZE) for _ in range(size)]
 
+    # plot pie plot of clustering by discrepancy to the population model 
+    plt.close()
+    fig, ax = plt.subplots(figsize=(12, 10), subplot_kw={"projection": "polar"})
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
+    ax.set_theta_direction(-1)
+    ax.set_theta_offset( np.pi)
+    ax.set_xticks([])
+    ax.set_ylim(0, np.max(discrepancy_pop.dist)*1.1)
+    ax.bar(ANGLES[IDXS], discrepancy_pop.dist, alpha=0.7, width=6/n,\
+           color=COLORS_, edgecolor="white", linewidth=1, zorder=5)
+    ax.set_ylabel('dist to pop kernel', fontsize=20)  
+    plt.savefig("./results/GP_ESM/discrepancy_bar.pdf", bbox_inches='tight')
+
+    # plot pie plot of eigen value
+    discrepancy_pop.sort_values(by=["cluster", "unit"], inplace=True)
+    plt.close()
+    fig, ax = plt.subplots(figsize=(12, 10), subplot_kw={"projection": "polar"}) 
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
+    ax.set_theta_direction(-1)
+    ax.set_theta_offset(np.pi)
+    ax.spines["polar"].set_visible(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_ylim(0, 1.05)
+    bottom = np.zeros(n)
+    for i in range(5):
+        ax.bar(ANGLES[IDXS], discrepancy_pop["eig_{}".format(i+1)], alpha=0.9-0.2*i, width=6/n,\
+            bottom=bottom, color=COLORS_, edgecolor="white", linewidth=1)
+        bottom += discrepancy_pop["eig_{}".format(i+1)]
+    for i in range(n):
+        ax.annotate(discrepancy_pop.unit.values[i], (ANGLES[IDXS][i], 1.02), ha='center')   
+    ax.set_ylabel('relative proportions of eigen values', fontsize=20)  
+    plt.savefig("./results/GP_ESM/eigvs.pdf", bbox_inches='tight')
+    
 if __name__=="__main__":
-    main()
-    plot_unit_cor_matrix()
-    cluster_analysis()
+    parser = argparse.ArgumentParser(description='-k model_type -f factor')
+    parser.add_argument('-k','--model_type', help='type of model', required=False)
+    parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
+    args = vars(parser.parse_args())
+    main(args)
+    # plot_unit_cor_matrix()
+    # cluster_analysis()
     # SEM()
