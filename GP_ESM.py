@@ -23,7 +23,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 10
+    num_epochs = 5
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -65,6 +65,8 @@ def main(args):
             train_x[ITER, 1] = j
             train_x[ITER, 2] = data.day[iter]
             train_y[ITER] = data[item_mapping[ESM_items[j]]][iter]
+            if reverse_code[j,0]==1:
+                train_y[ITER] = 6 - train_y[ITER]
             ITER += 1
 
     train_x = train_x[~train_y.isnan()]
@@ -113,7 +115,7 @@ def main(args):
                 num_params += num_param
     print("num of model parameters: {}".format(num_params))
 
-    optimizer = torch.optim.Adam(final_params, lr=0.05)
+    optimizer = torch.optim.Adam(final_params, lr=0.01)
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
@@ -193,12 +195,12 @@ def plot_unit_cor_matrix():
     # item_order = sorted(range(len(ESM_items)), key=lambda k: ESM_items[k])
     # plot populational kernel
     pop_task_kernel = results["pop_covariance"]
-    pop_task_kernel = pop_task_kernel * reverse_mask
+    pop_task_kernel = pop_task_kernel # * reverse_mask
     plot_task_kernel(pop_task_kernel, np.array(ESM_items), "./results/GP_ESM/both_5.pdf", SORT=False)
     # plot individual kernel
     for i in range(n):
         ind_task_kernel = results["unit_{}_covariance".format(i)]
-        ind_task_kernel = ind_task_kernel * reverse_mask
+        ind_task_kernel = ind_task_kernel # * reverse_mask
         all_cov[i] = ind_task_kernel
         plot_task_kernel(ind_task_kernel, \
                          np.array(ESM_items), \
@@ -293,14 +295,14 @@ def cluster_analysis():
 
     # plot populational kernel
     pop_task_kernel = results["pop_covariance"]
-    pop_task_kernel = pop_task_kernel * reverse_mask
+    pop_task_kernel = pop_task_kernel # * reverse_mask
     # plot individual kernel
     unit_cov_evs = np.zeros((n,5))
     discrepancy_pop = np.zeros((n,))
     all_cov = np.zeros((n,len(ESM_items),len(ESM_items)))
     for i in range(n):
         ind_task_kernel = results["unit_{}_covariance".format(i)]
-        ind_task_kernel = ind_task_kernel * reverse_mask
+        ind_task_kernel = ind_task_kernel # * reverse_mask
         all_cov[i] = ind_task_kernel
         eigv = np.linalg.eigvals(ind_task_kernel)
         eigv = np.sort(eigv)[::-1]
@@ -407,6 +409,6 @@ if __name__=="__main__":
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
     main(args)
-    # plot_unit_cor_matrix()
-    # cluster_analysis()
+    plot_unit_cor_matrix()
+    cluster_analysis()
     # SEM()
