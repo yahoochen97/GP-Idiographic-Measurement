@@ -96,7 +96,7 @@ def main(args):
     pop_prior = np.load("./results/loopr/loopr_pop_f5_e5.npz")
     loopr_idx = [Items_loopr.index(x) for x in ESM_items]
     model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
-    # reverse_code
+    model.pop_task_covar_module.covar_factor.requires_grad = False
 
     # select hyperparameters to learn
     for i in range(n):
@@ -104,7 +104,8 @@ def main(args):
     model.fixed_module.raw_lengthscale.requires_grad = False
 
     final_params = list(set(model.parameters()) - \
-                        {model.fixed_module.raw_lengthscale}) + \
+                        {model.fixed_module.raw_lengthscale,\
+                         model.pop_task_covar_module.covar_factor}) + \
                     list(likelihood.parameters())
 
     num_params = 0
