@@ -96,7 +96,7 @@ def main(args):
     pop_prior = np.load("./results/loopr/loopr_pop_f5_e5.npz")
     loopr_idx = [Items_loopr.index(x) for x in ESM_items]
     model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
-    model.pop_task_covar_module.covar_factor.requires_grad = False
+    # model.pop_task_covar_module.covar_factor.requires_grad = False
 
     # select hyperparameters to learn
     for i in range(n):
@@ -104,8 +104,7 @@ def main(args):
     model.fixed_module.raw_lengthscale.requires_grad = False
 
     final_params = list(set(model.parameters()) - \
-                        {model.fixed_module.raw_lengthscale,\
-                         model.pop_task_covar_module.covar_factor}) + \
+                        {model.fixed_module.raw_lengthscale}) + \
                     list(likelihood.parameters())
 
     num_params = 0
@@ -116,7 +115,7 @@ def main(args):
                 num_params += num_param
     print("num of model parameters: {}".format(num_params))
 
-    optimizer = torch.optim.Adam(final_params, lr=0.01)
+    optimizer = torch.optim.Adam(final_params, lr=0.05)
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
@@ -182,12 +181,12 @@ def plot_unit_cor_matrix():
 
     # generate item map from original to current using ESM codebook
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
-    reverse_code = codebook.iloc[:,2].to_list()
-    reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
-    reverse_code = np.array(reverse_code).reshape(-1,1)
-    reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
-    reverse_mask[reverse_code==1,:] *= -1
-    reverse_mask[:,reverse_code==1] *= -1
+    # reverse_code = codebook.iloc[:,2].to_list()
+    # reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
+    # reverse_code = np.array(reverse_code).reshape(-1,1)
+    # reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
+    # reverse_mask[reverse_code==1,:] *= -1
+    # reverse_mask[:,reverse_code==1] *= -1
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     n = data.PID.unique().shape[0]
@@ -284,12 +283,12 @@ def cluster_analysis():
 
     # generate item map from original to current using ESM codebook
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
-    reverse_code = codebook.iloc[:,2].to_list()
-    reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
-    reverse_code = np.array(reverse_code).reshape(-1,1)
-    reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
-    reverse_mask[reverse_code==1,:] *= -1
-    reverse_mask[:,reverse_code==1] *= -1
+    # reverse_code = codebook.iloc[:,2].to_list()
+    # reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
+    # reverse_code = np.array(reverse_code).reshape(-1,1)
+    # reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
+    # reverse_mask[reverse_code==1,:] *= -1
+    # reverse_mask[:,reverse_code==1] *= -1
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     n = data.PID.unique().shape[0]
@@ -313,7 +312,7 @@ def cluster_analysis():
     # k mean clustering
     from utilities.util import matrix_cluster, matrix_kmeans
     matrix_cluster(all_cov, max_K=10)
-    K = 8
+    K = 2
     centroids, assignments, dists = matrix_kmeans(all_cov, K=K)
     # plot centroids
     directory = "./results/GP_ESM/centroids/"
@@ -410,6 +409,6 @@ if __name__=="__main__":
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
     main(args)
-    plot_unit_cor_matrix()
-    cluster_analysis()
+    # plot_unit_cor_matrix()
+    # cluster_analysis()
     # SEM()

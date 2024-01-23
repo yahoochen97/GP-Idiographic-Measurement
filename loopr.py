@@ -84,7 +84,7 @@ def main(args):
 
     # train GPR
     print("start training...")
-    for i in range(num_epochs):
+    for i in range(2*num_epochs):
         log_lik = 0
         for j, (x_batch, y_batch) in enumerate(train_loader):
             optimizer.zero_grad()
@@ -112,7 +112,7 @@ def main(args):
     results = {}
     log_lik = train_ll * train_x.size(0)
     results["train_acc"] = train_acc
-    results["train_ll"] = train_ll
+    results["train_ll"] = log_lik
     results["BIC"] = num_params*np.log(train_x.size(0)) - 2*log_lik 
     results["pop_covariance"] = task_kernel
     results["pop_factor"] = model.pop_task_covar_module.covar_factor.data.detach().numpy()
@@ -190,16 +190,14 @@ def cor_factor():
 
 def model_comparison():
     PATH = "./results/loopr/"
-    FACTORS = [2,5]
+    FACTORS = [0,5]
     for i in range(len(FACTORS)):
-        results = np.load(PATH+"loopr_pop_f{}_e5.npz".format(FACTORS[i]))
+        results = np.load(PATH+"loopr_pop_f2_e{}.npz".format(FACTORS[i]))
         BIC = results["BIC"]
         train_acc = results["train_acc"]
-        train_ll = results["train_ll"]
-        print("loopr factor {}".format(FACTORS[i]))
+        train_ll = results["train_ll"] * 207540
+        print("loopr epoch {}".format(FACTORS[i]))
         print(train_ll)
-        print(BIC)
-        print(train_acc)
 
 
 if __name__=="__main__":
