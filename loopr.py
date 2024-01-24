@@ -84,7 +84,7 @@ def main(args):
 
     # train GPR
     print("start training...")
-    for i in range(2*num_epochs):
+    for i in range(num_epochs):
         log_lik = 0
         for j, (x_batch, y_batch) in enumerate(train_loader):
             optimizer.zero_grad()
@@ -190,14 +190,35 @@ def cor_factor():
 
 def model_comparison():
     PATH = "./results/loopr/"
-    FACTORS = [0,5]
+    FACTORS = [2,3,4,5]
+    train_lls = np.zeros((3,2,len(FACTORS)))
     for i in range(len(FACTORS)):
-        results = np.load(PATH+"loopr_pop_f2_e{}.npz".format(FACTORS[i]))
-        BIC = results["BIC"]
-        train_acc = results["train_acc"]
-        train_ll = results["train_ll"] * 207540
-        print("loopr epoch {}".format(FACTORS[i]))
-        print(train_ll)
+        results = np.load(PATH+"loopr_pop_f{}_e0.npz".format(FACTORS[i]))
+        train_ll = results["train_ll"] # * 207540
+        train_lls[0,0,i] = train_ll
+        train_lls[1,0,i] = results["train_acc"]
+        train_lls[2,0,i] = (5+60*FACTORS[i]+60)*np.log(207540) - 2*train_ll
+
+        results = np.load(PATH+"loopr_pop_f{}_e10.npz".format(FACTORS[i]))
+        train_ll = results["train_ll"] # * 207540
+        train_lls[0,1,i] = train_ll
+        train_lls[1,1,i] = results["train_acc"]
+        train_lls[2,1,i] = (5+60*FACTORS[i]+60)*np.log(207540) - 2*train_ll
+
+    print("ll:")
+    print(train_lls[0])
+    print("acc:")
+    print(train_lls[1])
+    print("BIC:")
+    print(train_lls[2])
+    # import matplotlib.pylab as plt
+    # plt.figure(figsize=(12, 10))
+    # plt.plot(FACTORS, train_lls[0]/207540, label="PCA")
+    # plt.plot(FACTORS, train_lls[1]/207540, label="ours")
+    # plt.legend(loc=0,fontsize=20)
+    # directory = "./results/loopr/"
+    # file_name = directory + "/compare_pop_factors.pdf"
+    # plt.savefig(file_name, bbox_inches='tight')
 
 
 if __name__=="__main__":

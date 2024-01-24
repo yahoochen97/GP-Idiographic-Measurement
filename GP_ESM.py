@@ -23,7 +23,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 5
+    num_epochs = 0
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -82,10 +82,10 @@ def main(args):
     # initialize likelihood and model
     inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
     likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
-    pop_rank = FACTOR
-    unit_rank = 1
-    if model_type=="ind":
-        unit_rank = FACTOR
+    pop_rank = 5
+    unit_rank = FACTOR
+    if model_type=="pop":
+        pop_rank = FACTOR
     model = OrdinalLMC(inducing_points,n=n,m=m,C=C,horizon=horizon,\
                     pop_rank=pop_rank, unit_rank=unit_rank, model_type=model_type)
 
@@ -93,10 +93,14 @@ def main(args):
     likelihood.train()
 
     # initialize covariance of pop factors
-    pop_prior = np.load("./results/loopr/loopr_pop_f5_e5.npz")
+    pop_prior = np.load("./results/loopr/loopr_pop_f{}_e10.npz".format(pop_rank))
     loopr_idx = [Items_loopr.index(x) for x in ESM_items]
     model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
-    # model.pop_task_covar_module.covar_factor.requires_grad = False
+    model.pop_task_covar_module.covar_factor.requires_grad = False
+    if model_type=="ind":
+        for i in range(n):
+            model.unit_task_covar_module[i].covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
+
 
     # select hyperparameters to learn
     for i in range(n):
@@ -104,7 +108,7 @@ def main(args):
     model.fixed_module.raw_lengthscale.requires_grad = False
 
     final_params = list(set(model.parameters()) - \
-                        {model.fixed_module.raw_lengthscale}) + \
+                        {model.fixed_module.raw_lengthscale, model.pop_task_covar_module.covar_factor}) + \
                     list(likelihood.parameters())
 
     num_params = 0
@@ -115,7 +119,7 @@ def main(args):
                 num_params += num_param
     print("num of model parameters: {}".format(num_params))
 
-    optimizer = torch.optim.Adam(final_params, lr=0.05)
+    optimizer = torch.optim.Adam(final_params, lr=0.01)
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
@@ -146,6 +150,7 @@ def main(args):
     print("train acc: {}".format(train_acc))
     print("train ll: {}".format(train_ll))
 
+    log_lik = train_ll * train_x.size(0)
     results["train_acc"] = train_acc
     results["train_ll"] = train_ll
     results["log_lik"] = log_lik
@@ -166,7 +171,7 @@ def main(args):
     PATH = "./results/GP_ESM/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
-    np.savez(PATH+"both_5.npz", **results)
+    np.savez(PATH+"{}_f{}.npz".format(model_type, FACTOR), **results)
 
 def plot_unit_cor_matrix():
     PATH = "./results/GP_ESM/"
@@ -181,12 +186,6 @@ def plot_unit_cor_matrix():
 
     # generate item map from original to current using ESM codebook
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
-    # reverse_code = codebook.iloc[:,2].to_list()
-    # reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
-    # reverse_code = np.array(reverse_code).reshape(-1,1)
-    # reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
-    # reverse_mask[reverse_code==1,:] *= -1
-    # reverse_mask[:,reverse_code==1] *= -1
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     n = data.PID.unique().shape[0]
@@ -312,7 +311,7 @@ def cluster_analysis():
     # k mean clustering
     from utilities.util import matrix_cluster, matrix_kmeans
     matrix_cluster(all_cov, max_K=10)
-    K = 2
+    K = 5
     centroids, assignments, dists = matrix_kmeans(all_cov, K=K)
     # plot centroids
     directory = "./results/GP_ESM/centroids/"

@@ -36,15 +36,23 @@ then
     python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
 elif [ $1 = "loopr" ]
 then
-    declare -a FACTORS=(2 5)
-    declare -a EPOCHS=(0 5)
+    declare -a FACTORS=(2 3 4 5)
+    declare -a EPOCHS=(0 10)
     TYPE="pop"
     for EPOCH in ${EPOCHS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
             python loopr.py -k $TYPE -f $FACTOR -e $EPOCH
         done
     done
+elif [ $1 = "ESM" ]
+then
+    declare -a FACTORS=(2 3 4 5)
+    declare -a MODELS=("pop" "both" "ind")
+    for MODEL in ${MODELS[@]}; do
+        for FACTOR in ${FACTORS[@]}; do
+            bsub -G SEAS-Lab-Garnett -o "log/ESM_${MODEL}_${FACTOR}.log" -J "GP_ESM" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
+        done
+    done
 fi
 
 # bsub -G SEAS-Lab-Garnett -o "log/loopr.log" -J "loopr" "module add seas-lab-vorobeychik;python loopr.py"
-# bsub -G SEAS-Lab-Garnett -o "log/GP_ESM.log" -J "GP_ESM" "module add seas-lab-vorobeychik;python GP_ESM.py"
