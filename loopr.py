@@ -197,13 +197,13 @@ def model_comparison():
         train_ll = results["train_ll"] # * 207540
         train_lls[0,0,i] = train_ll
         train_lls[1,0,i] = results["train_acc"]
-        train_lls[2,0,i] = (5+60*FACTORS[i]+60)*np.log(207540) - 2*train_ll
+        train_lls[2,0,i] = results["BIC"] # (5+45*FACTORS[i]+45)*np.log(3459*60) - 2*train_ll
 
         results = np.load(PATH+"loopr_pop_f{}_e10.npz".format(FACTORS[i]))
         train_ll = results["train_ll"] # * 207540
         train_lls[0,1,i] = train_ll
         train_lls[1,1,i] = results["train_acc"]
-        train_lls[2,1,i] = (5+60*FACTORS[i]+60)*np.log(207540) - 2*train_ll
+        train_lls[2,1,i] = results["BIC"] # (5+45*FACTORS[i]+45)*np.log(3459*60) - 2*train_ll
 
     print("ll:")
     print(train_lls[0])
@@ -227,7 +227,7 @@ if __name__=="__main__":
     parser.add_argument('-e','--epoch', help='num of training epochs', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    # main(args)
+    main(args)
     # cor_factor()
     # cor_pca()
-    model_comparison()
+    # model_comparison()

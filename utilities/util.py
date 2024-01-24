@@ -497,7 +497,7 @@ class OrdinalLMC(ApproximateGP):
         # task kernel
         # if self.model_type=="pop":
         task_covar_x = self.pop_task_covar_module(x[:,1])#.evaluate_kernel().evaluate()
-        if self.model_type!="ind":
+        if self.model_type=="ind":
             task_covar_x *= 0
         # pop_weights = self.task_weights_module(x[:,0])
         # task_covar_x *= pop_weights

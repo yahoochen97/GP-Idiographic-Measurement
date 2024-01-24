@@ -42,6 +42,8 @@ def main(args):
 
     # read data
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+    data = data[data.PID<=20]
+
     data.columns = [x.replace(" ", "") for x in data.columns]
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]

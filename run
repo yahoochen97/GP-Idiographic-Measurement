@@ -50,7 +50,7 @@ then
     declare -a MODELS=("pop" "both" "ind")
     for MODEL in ${MODELS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
-            bsub -G SEAS-Lab-Garnett -o "log/ESM_${MODEL}_${FACTOR}.log" -J "GP_ESM" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
+            bsub -G SEAS-Lab-Garnett -o "log/ESM_${MODEL}_${FACTOR}.log" -J "ESM_${MODEL}_${FACTOR}" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
         done
     done
 fi
