@@ -190,7 +190,7 @@ def cor_factor():
 
 def model_comparison():
     PATH = "./results/loopr/"
-    FACTORS = [2,3,4,5]
+    FACTORS = [1,2,3,4,5]
     train_lls = np.zeros((3,2,len(FACTORS)))
     for i in range(len(FACTORS)):
         results = np.load(PATH+"loopr_pop_f{}_e0.npz".format(FACTORS[i]))
@@ -227,7 +227,7 @@ if __name__=="__main__":
     parser.add_argument('-e','--epoch', help='num of training epochs', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    main(args)
+    # main(args)
     # cor_factor()
     # cor_pca()
-    # model_comparison()
+    model_comparison()
