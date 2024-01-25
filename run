@@ -46,7 +46,7 @@ then
     done
 elif [ $1 = "ESM" ]
 then
-    declare -a FACTORS=(2 3 4 5)
+    declare -a FACTORS=(1 2 3 4 5)
     declare -a MODELS=("pop" "both" "ind")
     for MODEL in ${MODELS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
