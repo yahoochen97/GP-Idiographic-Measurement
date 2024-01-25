@@ -23,7 +23,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 0
+    num_epochs = 5
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -42,7 +42,6 @@ def main(args):
 
     # read data
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
-    data = data[data.PID<=20]
 
     data.columns = [x.replace(" ", "") for x in data.columns]
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
@@ -121,7 +120,7 @@ def main(args):
                 num_params += num_param
     print("num of model parameters: {}".format(num_params))
 
-    optimizer = torch.optim.Adam(final_params, lr=0.01)
+    optimizer = torch.optim.Adam(final_params, lr=0.05)
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
@@ -144,6 +143,7 @@ def main(args):
     # prediction
     model.eval()
     likelihood.eval()
+    print("start predicting...")
 
     train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader)
 
@@ -165,8 +165,10 @@ def main(args):
     unit_covariance = np.zeros((n,m,m))
     for i in range(n):
         task_kernel = np.zeros((m,m))
-        task_kernel += model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
-        task_kernel += model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy()
+        if model_type!="ind":
+            task_kernel += model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
+        if model_type!="pop":
+            task_kernel += model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy()
         unit_covariance[i] = task_kernel
         results["unit_{}_covariance".format(i)] = task_kernel
 
