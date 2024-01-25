@@ -479,9 +479,6 @@ class OrdinalLMC(ApproximateGP):
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
                     rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])
            
-        # weights for populational and individual covariance, 1 means pop, 0 means ind
-        # self.task_weights_module = WeightKernel(input_size=torch.Size([n]))
-
         # fixed matrix for indicating unit in the item task kernel
         # equals 1 if and only if unit indices are the same
         self.fixed_module = RBFKernel()
@@ -495,37 +492,15 @@ class OrdinalLMC(ApproximateGP):
         unit_indicator_x = self.fixed_module(x[:,0])
 
         # task kernel
-        # if self.model_type=="pop":
         task_covar_x = self.pop_task_covar_module(x[:,1])#.evaluate_kernel().evaluate()
         if self.model_type=="ind":
             task_covar_x *= 0
         # pop_weights = self.task_weights_module(x[:,0])
-        # task_covar_x *= pop_weights
         if self.model_type!="pop":
             for i in range(self.n):
-                # update unit i only by self.unit_mask_covar_module[i](x[:,0])
-                # ind weights by (unit_indicator_x-pop_weights)
-                # task correlation by self.unit_task_covar_module[i](x[:,1])
-                # unit_indicator_x-pop_weights
                 task_covar_x += self.unit_mask_covar_module[i](x[:,0]) * \
                     (unit_indicator_x) * self.unit_task_covar_module[i](x[:,1])
            
-            # task_covar_x = self.pop_task_covar_module(x[:,1]) * 0
-            # pop_weights = self.task_weights_module.weights
-            # for i in range(self.n):
-            #     unit_mask = (x[:,0]==i)
-            #     if sum(unit_mask)==0:
-            #         continue
-            #     if self.model_type=="both":
-            #         task_covar_x[unit_mask, :][:, unit_mask] += pop_weights[i]*\
-            #             self.pop_task_covar_module(x[unit_mask,1]).evaluate()
-            #     task_covar_x[unit_mask, :][:, unit_mask] += (1-pop_weights[i])*\
-            #         self.unit_task_covar_module[i](x[unit_mask,1]).evaluate()
-                # ind_weights = torch.where(x[:,0]==i,1,0)
-                # ind_weights = ind_weights.reshape((-1,1)) @ ind_weights.reshape((1,-1)) 
-                # ind_weights = (1-self.task_weights_module.weights[x[:,0].long()]) * ind_weights
-                # task_covar_x += ind_weights * self.unit_task_covar_module[i](x[:,1])
-        
         # product of unit indicator, task and time kernels
         covar_x = unit_indicator_x * task_covar_x
 
