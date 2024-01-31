@@ -474,7 +474,7 @@ class OrdinalLMC(ApproximateGP):
                     for i in range(n)])
         if model_type=="both":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
-                    rank=unit_rank, prior=NormalPrior(0.,1)) for i in range(n)])
+                    rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])
         elif model_type=="ind":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
                     rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])

@@ -75,6 +75,8 @@ def main(args):
     train_x = train_x[train_y!=0]
     train_y = train_y[train_y!=0]
 
+    print(train_x.shape)
+
     # build data loader
     C = 5
     train_dataset = TensorDataset(train_x, train_y)
@@ -179,7 +181,7 @@ def main(args):
 
 def plot_unit_cor_matrix():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_5.npz")
+    results = np.load(PATH+"both_5_Jan23.npz")
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -190,6 +192,12 @@ def plot_unit_cor_matrix():
 
     # generate item map from original to current using ESM codebook
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
+    # reverse_code = codebook.iloc[:,2].to_list()
+    # reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
+    # reverse_code = np.array(reverse_code)#.reshape(-1,1)
+    # reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
+    # reverse_mask[reverse_code==1,:] *= -1
+    # reverse_mask[:,reverse_code==1] *= -1
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     n = data.PID.unique().shape[0]
@@ -275,7 +283,7 @@ def SEM():
 
 def cluster_analysis():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_5.npz")
+    results = np.load(PATH+"both_5_Jan23.npz")
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -288,7 +296,7 @@ def cluster_analysis():
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
     # reverse_code = codebook.iloc[:,2].to_list()
     # reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
-    # reverse_code = np.array(reverse_code).reshape(-1,1)
+    # reverse_code = np.array(reverse_code)#.reshape(-1,1)
     # reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
     # reverse_mask[reverse_code==1,:] *= -1
     # reverse_mask[:,reverse_code==1] *= -1
@@ -315,7 +323,7 @@ def cluster_analysis():
     # k mean clustering
     from utilities.util import matrix_cluster, matrix_kmeans
     matrix_cluster(all_cov, max_K=10)
-    K = 5
+    K = 8
     centroids, assignments, dists = matrix_kmeans(all_cov, K=K)
     # plot centroids
     directory = "./results/GP_ESM/centroids/"
@@ -381,7 +389,7 @@ def cluster_analysis():
     ax.set_ylim(0, np.max(discrepancy_pop.dist)*1.1)
     ax.bar(ANGLES[IDXS], discrepancy_pop.dist, alpha=0.7, width=6/n,\
            color=COLORS_, edgecolor="white", linewidth=1, zorder=5)
-    ax.set_ylabel('dist to pop kernel', fontsize=20)  
+    # ax.set_ylabel('dist to pop kernel', fontsize=20)  
     plt.savefig("./results/GP_ESM/discrepancy_bar.pdf", bbox_inches='tight')
 
     # plot pie plot of eigen value
@@ -403,7 +411,7 @@ def cluster_analysis():
         bottom += discrepancy_pop["eig_{}".format(i+1)]
     for i in range(n):
         ax.annotate(discrepancy_pop.unit.values[i], (ANGLES[IDXS][i], 1.02), ha='center')   
-    ax.set_ylabel('relative proportions of eigen values', fontsize=20)  
+    # ax.set_ylabel('relative proportions of eigen values', fontsize=20)  
     plt.savefig("./results/GP_ESM/eigvs.pdf", bbox_inches='tight')
     
 if __name__=="__main__":

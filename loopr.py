@@ -206,11 +206,11 @@ def model_comparison():
         train_lls[2,1,i] = results["BIC"] # (5+45*FACTORS[i]+45)*np.log(3459*60) - 2*train_ll
 
     print("ll:")
-    print(train_lls[0])
+    print(train_lls[0]+306516.59085925)
     print("acc:")
     print(train_lls[1])
-    print("BIC:")
-    print(train_lls[2])
+    # print("BIC:")
+    # print(train_lls[2])
     # import matplotlib.pylab as plt
     # plt.figure(figsize=(12, 10))
     # plt.plot(FACTORS, train_lls[0]/207540, label="PCA")
@@ -227,7 +227,7 @@ if __name__=="__main__":
     parser.add_argument('-e','--epoch', help='num of training epochs', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    # main(args)
+    main(args)
     # cor_factor()
     # cor_pca()
-    model_comparison()
+    # model_comparison()

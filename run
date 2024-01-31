@@ -47,7 +47,7 @@ then
 elif [ $1 = "ESM" ]
 then
     declare -a FACTORS=(1)
-    declare -a MODELS=("pop" "both")
+    declare -a MODELS=("both")
     for MODEL in ${MODELS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
             bsub -G SEAS-Lab-Garnett -o "log/ESM_${MODEL}_${FACTOR}.log" -J "ESM_${MODEL}_${FACTOR}" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
