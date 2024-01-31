@@ -540,7 +540,7 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
         item_names = item_names[kernel_order]
 
     # cov to corr
-    # task_kernel = cov_to_corr(task_kernel)    
+    task_kernel = cov_to_corr(task_kernel)    
     
     colormap = "PuOr_r" 
     norm = plt.Normalize(-1.0,1.0)
