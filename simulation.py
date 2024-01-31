@@ -102,7 +102,7 @@ def main(args):
                         model.pop_task_covar_module.covar_factor}) + \
                         list(likelihood.parameters())
 
-    optimizer = torch.optim.Adam(final_params, lr=0.1)
+    optimizer = torch.optim.Adam(final_params, lr=0.01)
     
     num_params = 0
     for p in final_params:

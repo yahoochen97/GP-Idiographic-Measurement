@@ -122,7 +122,7 @@ def main(args):
                 num_params += num_param
     print("num of model parameters: {}".format(num_params))
 
-    optimizer = torch.optim.Adam(final_params, lr=0.05)
+    optimizer = torch.optim.Adam(final_params, lr=0.1)
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
@@ -419,7 +419,7 @@ if __name__=="__main__":
     parser.add_argument('-k','--model_type', help='type of model', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    main(args)
-    # plot_unit_cor_matrix()
-    # cluster_analysis()
+    # main(args)
+    plot_unit_cor_matrix()
+    cluster_analysis()
     # SEM()
