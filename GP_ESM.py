@@ -23,7 +23,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 5
+    num_epochs = 10
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -122,7 +122,7 @@ def main(args):
                 num_params += num_param
     print("num of model parameters: {}".format(num_params))
 
-    optimizer = torch.optim.Adam(final_params, lr=0.1)
+    optimizer = torch.optim.Adam(final_params, lr=0.05)
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))
@@ -181,7 +181,7 @@ def main(args):
 
 def plot_unit_cor_matrix():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_5_Jan23.npz")
+    results = np.load(PATH+"both_f1_Feb.npz")
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -283,7 +283,7 @@ def SEM():
 
 def cluster_analysis():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_5_Jan23.npz")
+    results = np.load(PATH+"both_f1_Feb.npz")
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -323,7 +323,7 @@ def cluster_analysis():
     # k mean clustering
     from utilities.util import matrix_cluster, matrix_kmeans
     matrix_cluster(all_cov, max_K=10)
-    K = 8
+    K = 5
     centroids, assignments, dists = matrix_kmeans(all_cov, K=K)
     # plot centroids
     directory = "./results/GP_ESM/centroids/"
@@ -419,7 +419,7 @@ if __name__=="__main__":
     parser.add_argument('-k','--model_type', help='type of model', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    main(args)
+    # main(args)
     # plot_unit_cor_matrix()
-    # cluster_analysis()
+    cluster_analysis()
     # SEM()
