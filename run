@@ -12,7 +12,7 @@ MAXSEED=25
 declare -a TYPES=("pop" "ind" "both" "graded_multi" "gpcm_multi" "sequential_multi")
 declare -a FACTORS=(5)
 
-declare -a TYPES=("both_prior")
+# declare -a TYPES=("both_prior")
 
 if [ $1 = "run" ]
 then
