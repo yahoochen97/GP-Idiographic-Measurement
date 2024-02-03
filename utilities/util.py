@@ -676,7 +676,7 @@ def matrix_kmeans(matrices, K):
 def correlation_matrix_distance(r1,r2):
     return 1 - np.trace(r1 @ r2) / np.linalg.norm(r1) / np.linalg.norm(r2)
 
-def evaluate_gpr(model, likelihood, data_loader):
+def evaluate_gpr(model, likelihood, data_loader, mll=None):
     means = torch.tensor([0])
     true_ys = torch.tensor([0])
     lls = torch.tensor([0])
@@ -686,6 +686,9 @@ def evaluate_gpr(model, likelihood, data_loader):
             test_dist.sample()
             if isinstance(likelihood, gpytorch.likelihoods.GaussianLikelihood):
                 probabilities = test_dist.loc
+                probabilities = torch.round(np.clip(probabilities, 1, 5))
+                loss = mll(test_dist, y_batch)
+                lls = torch.cat([lls, loss.repeat(y_batch.shape)])
             else:
                 probabilities = test_dist.probs.argmax(axis=1) + 1
                 lls = torch.cat([lls, test_dist.probs[range(y_batch.shape[0]),y_batch.long()-1].log()])

@@ -15,6 +15,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from gpytorch.mlls import VariationalELBO
+from gpytorch.likelihoods import GaussianLikelihood
 from torch.utils.data import TensorDataset, DataLoader
 from utilities.util import OrdinalLMC, OrdinalLikelihood
 from utilities.util import correlation_matrix_distance, plot_task_kernel, evaluate_gpr
@@ -40,6 +41,7 @@ def main(args):
     C = train_y.unique().size(0)
 
     parts = model_type.split("_")
+    fix_prior = None
     if len(parts)>1:
         model_type = parts[0]
         fix_prior = parts[1]
@@ -58,7 +60,12 @@ def main(args):
 
     # initialize likelihood and model
     inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
-    likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,\
+    if model_type=="Gaussian":
+        likelihood = GaussianLikelihood()
+        model_type = "both"
+        fix_prior = "prior"
+    else:
+        likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,\
                                    -2.,-1.,1.,2.,20.]))
     
     pop_rank = FACTOR
@@ -145,8 +152,8 @@ def main(args):
     model.eval()
     likelihood.eval()
 
-    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader)
-    test_acc, test_ll = evaluate_gpr(model, likelihood, test_loader)
+    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader, mll)
+    test_acc, test_ll = evaluate_gpr(model, likelihood, test_loader, mll)
 
     loading_file = "loadings_n{}_m{}_t{}_rank{}_SEED{}.npz".format(n,m,horizon,RANK,SEED)
     PATH = "./data/synthetic/"
@@ -190,6 +197,8 @@ def main(args):
         unit_dist = correlation_matrix_distance(dgp_covariance, unit_covariance[i])
         print("unit {} dist: {}".format(i, unit_dist))
       
+    if isinstance(likelihood, GaussianLikelihood):
+        model_type = "Gaussian"
     PATH = "./results/synthetic/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
