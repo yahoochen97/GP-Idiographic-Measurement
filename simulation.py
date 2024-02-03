@@ -28,7 +28,7 @@ def main(args):
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     load_batch_size = 256
-    num_inducing = 1000
+    num_inducing = 100
     num_epochs = 10
 
     # load data
@@ -38,6 +38,11 @@ def main(args):
     train_x = torch.tensor(data[["unit","item","time"]].to_numpy())
     train_y = torch.tensor(data.y)
     C = train_y.unique().size(0)
+
+    parts = model_type.split("_")
+    if len(parts)>1:
+        model_type = parts[0]
+        fix_prior = parts[1]
 
     # split train/test 
     train_mask = data.train.to_numpy()
@@ -75,23 +80,29 @@ def main(args):
         cov_file = "cov_pop_n{}_m{}_t{}_rank{}_SEED{}.npz".format(n,m,horizon,FACTOR,SEED)
         if os.path.exists(PATH + cov_file):
             tmp = np.load(PATH + cov_file)
-            if model_type=="both":
+            if model_type=="both" and fix_prior=="prior":
                 model.pop_task_covar_module.covar_factor.data = torch.tensor(tmp["pop_factor"])
-            elif model_type=="ind":
-                print("loading factors...")
-                for i in range(n):
-                    model.unit_task_covar_module[i].covar_factor.data = torch.tensor(tmp["pop_factor"])
+            
+            # elif model_type=="ind":
+            #     print("loading factors...")
+            #     for i in range(n):
+            #         model.unit_task_covar_module[i].covar_factor.data = torch.tensor(tmp["pop_factor"])
 
     # select parameters to learn
     if model_type=="both":
-        final_params = list(set(model.parameters()) - \
+        if fix_prior=="prior":
+            final_params = list(set(model.parameters()) - \
+                    {model.fixed_module.raw_lengthscale,\
+                     model.pop_task_covar_module.covar_factor}) + \
+            list(likelihood.parameters())
+        else:
+            final_params = list(set(model.parameters()) - \
                     {model.fixed_module.raw_lengthscale}) + \
             list(likelihood.parameters())
     else:
         if model_type=="pop":
             final_params = list(set(model.parameters()) - \
-                        {model.fixed_module.raw_lengthscale\
-                        }) + \
+                        {model.fixed_module.raw_lengthscale}) + \
                        list(likelihood.parameters())
         elif model_type=="ind":
             model.pop_task_covar_module.raw_var.requires_grad = False
@@ -102,7 +113,7 @@ def main(args):
                         model.pop_task_covar_module.covar_factor}) + \
                         list(likelihood.parameters())
 
-    optimizer = torch.optim.Adam(final_params, lr=0.01)
+    optimizer = torch.optim.Adam(final_params, lr=0.05)
     
     num_params = 0
     for p in final_params:
@@ -178,27 +189,12 @@ def main(args):
         dgp_covariance = dgp_pop_loadings.T @ dgp_pop_loadings + dgp_unit_loadings[i].T @ dgp_unit_loadings[i]
         unit_dist = correlation_matrix_distance(dgp_covariance, unit_covariance[i])
         print("unit {} dist: {}".format(i, unit_dist))
-        # plot_task_kernel(dgp_covariance, np.arange(m), "./data/synthetic/dgp_{}.pdf".format(i), SORT=False)
-        # plot_task_kernel(unit_covariance[i], np.arange(m), "./data/synthetic/est_{}.pdf".format(i), SORT=False)
-
+      
     PATH = "./results/synthetic/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(model_type, n,m,horizon,FACTOR,SEED)
     np.savez(PATH+cov_file, **results)
-
-    # from sklearn.decomposition import PCA
-    # pca = PCA(n_components=5)
-    # pca.fit(results["pop_covariance"])
-    # print(pca.explained_variance_ratio_)
-    # vecs = pca.components_
-    
-    # import matplotlib.pyplot as plt
-    # for i in range(5):
-    #     plt.plot(vecs[0,(i*4):(i*4+4)],vecs[1,(i*4):(i*4+4)], "x")
-    # plt.xlim([-1,1])
-    # plt.ylim([-1,1])
-    # plt.savefig("./results/pop/pop_pca.pdf")
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='-n num_unit -m num_item -t num_period -s seed -r rank -f factor')

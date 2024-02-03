@@ -540,8 +540,8 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
         item_names = item_names[kernel_order]
 
     # cov to corr
-    task_kernel = cov_to_corr(task_kernel)    
-    
+    task_kernel = cov_to_corr(task_kernel)
+
     colormap = "PuOr_r" 
     norm = plt.Normalize(-1.0,1.0)
     sns.heatmap(task_kernel,yticklabels=item_names, xticklabels=item_names, \
@@ -573,6 +573,39 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
             plt.text(-7.2, 12*i+5.5, categories[i], va='center', rotation=90, fontsize=10)
             plt.text(-6.4, 12*i+5.5, r"$\overbrace{\hspace{10.5em}}$", va='center', rotation=90)
     plt.savefig(file_name, bbox_inches='tight')
+
+def agg_kernel(task_kernel):
+    tmp = np.zeros((5,5))
+    for i in range(5):
+        for j in range(5):
+            tmp[i,j] = np.mean(task_kernel[(i*9):(i*9+9),(j*9):(j*9+9)])
+    return tmp
+
+def plot_agg_task_kernel(task_kernel, pop_kernel, file_name):
+    plt.figure(figsize=(12, 10))
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+
+    task_kernel = agg_kernel(task_kernel)
+    pop_kernel = agg_kernel(pop_kernel)
+
+    # cov to corr
+    task_kernel = cov_to_corr(task_kernel)
+    pop_kernel = cov_to_corr(pop_kernel)
+    task_kernel = task_kernel - pop_kernel
+
+    categories = ["E","A","C","N","O"]
+    
+    colormap = sns.diverging_palette(250, 10, sep=50, n=10, center="light", as_cmap=True)
+
+    norm = plt.Normalize(-0.5, 0.5)
+    sns.heatmap(task_kernel,xticklabels=categories, \
+                yticklabels=categories, cmap=colormap, norm=norm)
+    plt.xticks(fontsize=32)
+    plt.yticks(fontsize=32) 
+    plt.tick_params(left=False, bottom=False)
+    plt.savefig(file_name, bbox_inches='tight')
+
 
 def matrix_cluster(matrices, max_K=10):
     centroids = None

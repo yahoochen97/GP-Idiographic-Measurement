@@ -18,7 +18,8 @@ warnings.filterwarnings("ignore")
 from gpytorch.mlls import VariationalELBO
 from torch.utils.data import TensorDataset, DataLoader
 from utilities.util import OrdinalLMC, OrdinalLikelihood
-from utilities.util import correlation_matrix_distance, plot_task_kernel, evaluate_gpr
+from utilities.util import correlation_matrix_distance, plot_task_kernel
+from utilities.util import plot_agg_task_kernel, evaluate_gpr
 
 def main(args):
     load_batch_size = 512
@@ -217,10 +218,11 @@ def plot_unit_cor_matrix():
                          np.array(ESM_items), \
                         "./results/GP_ESM/both_unit_cov/both_unit_{}_5.pdf".format(i), SORT=False)
         
-        plot_task_kernel(ind_task_kernel - pop_task_kernel, \
+        plot_agg_task_kernel(ind_task_kernel, pop_task_kernel, \
                          np.array(ESM_items), \
                         "./results/GP_ESM/both_ind_cov/both_ind_{}_5.pdf".format(i), SORT=False)
 
+    return
     # iterate over all pairs of items
     for p in range(15):
         for q in range(p+1,15):
@@ -330,9 +332,10 @@ def cluster_analysis():
     if not os.path.exists(directory):
         os.makedirs(directory)
     for k in range(K):
-            plot_task_kernel(centroids[k], \
-                    np.array(ESM_items), \
-                    directory + "centroid_{}_5.pdf".format(k), SORT=False)
+        # plot_task_kernel(centroids[k], \
+        #     np.array(ESM_items), \
+        #     directory + "centroid_{}_5.pdf".format(k), SORT=False)
+        plot_agg_task_kernel(centroids[k], pop_task_kernel, directory + "residual_{}.pdf".format(k))
     centroids_dist =  np.zeros((K,K))       
     for k in range(K):
         for k_ in range(K):
@@ -420,6 +423,6 @@ if __name__=="__main__":
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
     # main(args)
-    # plot_unit_cor_matrix()
-    cluster_analysis()
+    plot_unit_cor_matrix()
+    # cluster_analysis()
     # SEM()
