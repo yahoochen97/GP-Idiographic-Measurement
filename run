@@ -16,21 +16,21 @@ declare -a FACTORS=(5)
 
 if [ $1 = "run" ]
 then
-    for SEED in $(seq 1 1 $MAXSEED); do
-        for TYPE in ${TYPES[@]}; do
-            bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${RANK}"
-        done
-    done
-
-    # declare -a TYPES=("both")
-    # declare -a FACTORS=(2 8)
     # for SEED in $(seq 1 1 $MAXSEED); do
     #     for TYPE in ${TYPES[@]}; do
-    #         for FACTOR in ${FACTORS[@]}; do
-    #             bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${FACTOR}"
-    #         done
+    #         bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${RANK}"
     #     done
     # done
+
+    declare -a TYPES=("pop")
+    declare -a FACTORS=(2)
+    for SEED in $(seq 1 1 $MAXSEED); do
+        for TYPE in ${TYPES[@]}; do
+            for FACTOR in ${FACTORS[@]}; do
+                bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${FACTOR}"
+            done
+        done
+    done
 elif [ $1 = "summary" ]
 then
     python utilities/summary.py -n 10 -m 20 -t 30 -r 5 -s 25
