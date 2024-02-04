@@ -35,7 +35,7 @@ then
 elif [ $1 = "summary" ]
 then
     python utilities/summary.py -n 10 -m 20 -t 30 -r 5 -s 25
-    python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
+    # python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
 elif [ $1 = "loopr" ]
 then
     declare -a FACTORS=(1)
