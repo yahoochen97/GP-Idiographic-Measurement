@@ -21,6 +21,7 @@ from utilities.util import OrdinalLMC, OrdinalLikelihood
 from utilities.util import correlation_matrix_distance, plot_task_kernel, evaluate_gpr
 
 def main(args):
+    print(args)
     SEED = int(args["seed"])
     n = int(args["num_unit"])
     m = int(args["num_item"])
