@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import argparse
+import matplotlib.pyplot as plt
 
 MODELS = ["pop", "both"]
 PRED_TYPES = ["last_1", "last_2", "last_3", "last_4", "last_5",\
@@ -28,11 +29,40 @@ def main(args):
 
     result = pd.DataFrame(results[:,:,0], columns=PRED_TYPES)
     result = result.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
-    print(result)
+    
+    plt.close()
+    plt.figure(figsize=(6, 5))
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+    MODELS = ["IPGP-pop", "IPGP"]
+    for i in range(len(MODELS)):
+        plt.plot(range(5), results[i,:,0], label=MODELS[i])
+    plt.ylim([0.2, 0.5])
+    plt.legend(loc=0, fontsize=24)
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24) 
+    plt.xlabel("horizon (days)", fontsize=24)
+    plt.tick_params(bottom=False)
+    plt.ylabel("predictive acc", fontsize=24)
+    plt.savefig(RESULT_PATH+"last_acc.pdf", bbox_inches='tight')
 
     result = pd.DataFrame(results[:,:,1], columns=PRED_TYPES)
     result = result.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
-    print(result)
+    plt.close()
+    plt.figure(figsize=(6, 5))
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+    MODELS = ["IPGP-pop", "IPGP"]
+    for i in range(len(MODELS)):
+        plt.plot(range(5), results[i,:,1], label=MODELS[i])
+    plt.ylim([0.2, 0.5])
+    plt.legend(loc=0, fontsize=24)
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24) 
+    plt.tick_params(bottom=False)
+    plt.xlabel("horizon (days)", fontsize=24)
+    plt.ylabel("predictive ll", fontsize=24)
+    plt.savefig(RESULT_PATH+"last_ll.pdf", bbox_inches='tight')
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='')
