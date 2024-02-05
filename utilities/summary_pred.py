@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 PRED_TYPES = ["last_1", "last_2", "last_3", "last_4", "last_5",\
             "trait_E", "trait_A", "trait_O", "trait_N", "trait_C"]
 
-PRED_TYPES = ["last_1", "last_2", "last_3", "last_4", "last_5"]
+PRED_TYPES = ["last_2", "last_1", "last_3", "last_4", "last_5"]
 
 RESULT_PATH = "./results/GP_ESM/prediction/"
 
@@ -27,7 +27,8 @@ def main(args):
     results = np.round(results, decimals=3)
     
     def plot_result(results, TASK, MEASURE):
-        fig, ax = plt.subplots(figsize=(6, 5))
+        fig = plt.figure(figsize=(6, 5))
+        ax = fig.gca()
         MODELS = ["IPGP-pop", "IPGP"]
         for i in range(len(MODELS)):
             plt.plot(range(1,6), results[i,:], label=MODELS[i])
