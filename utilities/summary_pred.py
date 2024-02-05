@@ -18,16 +18,16 @@ def main(args):
 
     for j in range(len(PRED_TYPES)):
         for i in range(len(MODELS)):
-            cov_file = "{}_{}.npz".format(MODELS[i], PRED_TYPES[i])
+            cov_file = "{}_{}.npz".format(MODELS[i], PRED_TYPES[j])
             data = np.load(RESULT_PATH + cov_file)
 
-            results[i,j,0] = np.array(data["test_acc"])
-            results[i,j,1] = np.array(data["test_ll"])
+            results[i,j,0] = data["test_acc"]
+            results[i,j,1] = data["test_ll"]
  
     results = np.round(results, decimals=3)
 
-    results = pd.DataFrame(results[:,:,0], columns=MODELS)
-    results = results.rename(index=dict(zip([i for i in range(len(PRED_TYPES))], PRED_TYPES)))
+    results = pd.DataFrame(results[:,:,0], columns=PRED_TYPES)
+    results = results.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
     print(results)
 
     results = pd.DataFrame(results[:,:,1], columns=PRED_TYPES)
