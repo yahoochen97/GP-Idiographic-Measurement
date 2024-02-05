@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import argparse
-import pyreadr
 
 from util import correlation_matrix_distance, plot_task_kernel
 
