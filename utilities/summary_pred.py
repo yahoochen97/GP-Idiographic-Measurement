@@ -41,7 +41,7 @@ def main(args):
         plt.xticks(XTICKS,XTICKS, fontsize=20)
         plt.yticks(YTICKS, YTICKS, fontsize=20) 
         plt.xlabel("horizon (days)", fontsize=20)
-        plt.tick_params(bottom=False)
+        plt.tick_params(left=False, bottom=False)
         plt.ylabel("predictive " + MEASURE, fontsize=20)
         ax.grid(axis='y')
         ax.spines['top'].set_visible(False)
@@ -49,6 +49,7 @@ def main(args):
         ax.spines['bottom'].set_visible(False)
         ax.spines['left'].set_visible(False)
         plt.savefig(RESULT_PATH+TASK + "_" + MEASURE +".pdf", bbox_inches='tight')
+        plt.show()
         plt.close(fig=fig)
 
     plot_result(results, "last", "acc")
