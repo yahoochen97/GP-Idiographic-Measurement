@@ -33,18 +33,18 @@ def main(args):
         colors = ["orange", "blue"]
         for j in range(len(MODELS)):
             ax.plot(range(1,6), results[j,:], label=MODELS[j], color=colors[j])
-        ax.ylim([0.2, 0.5])
+        ax.set_ylim([0.2, 0.5])
         if i==1:
-            ax.legend(loc=0, fontsize=20)
+            ax.set_legend(loc=0, fontsize=20)
         XTICKS = [1,2,3,4,5]
         YTICKS = [0.2, 0.3, 0.4, 0.5]
         if MEASURE=="ll":
             YTICKS = [-1.9, -1.7,-1.5,-1.3]
-        ax.xticks(XTICKS,XTICKS, fontsize=20)
-        ax.yticks(YTICKS, YTICKS, fontsize=20) 
-        ax.xlabel("horizon (days)", fontsize=20)
-        ax.tick_params(left=False, bottom=False)
-        ax.ylabel("predictive " + MEASURE, fontsize=20)
+        ax.set_xticks(XTICKS,XTICKS, fontsize=20)
+        ax.set_yticks(YTICKS, YTICKS, fontsize=20) 
+        ax.set_xlabel("horizon (days)", fontsize=20)
+        ax.set_tick_params(left=False, bottom=False)
+        ax.set_ylabel("predictive " + MEASURE, fontsize=20)
         ax.grid(axis='y')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
