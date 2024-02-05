@@ -26,8 +26,8 @@ def main(args):
  
     results = np.round(results, decimals=3)
 
-    results = pd.DataFrame(results[:,:,0], columns=PRED_TYPES)
-    results = results.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
+    results = pd.DataFrame(results[:,:,0], columns=MODELS)
+    results = results.rename(index=dict(zip([i for i in range(len(PRED_TYPES))], PRED_TYPES)))
     print(results)
 
     results = pd.DataFrame(results[:,:,1], columns=PRED_TYPES)
