@@ -102,8 +102,6 @@ def main(args):
 
     # build data loader
     C = 5
-    train_dataset = TensorDataset(train_x, train_y)
-    train_loader = DataLoader(train_dataset, batch_size=load_batch_size, shuffle=True)
     test_dataset = TensorDataset(test_x, test_y)
     test_loader = DataLoader(test_dataset, batch_size=load_batch_size, shuffle=False)
 
@@ -119,7 +117,7 @@ def main(args):
     likelihood.train()
 
     # initialize covariance of pop factors
-    pop_prior = np.load("./results/GP_ESM/both_f1_Feb.npz")
+    pop_prior = np.load("./results/GP_ESM/both_5_Jan23.npz")
     model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"])
     
     if model_type=="both":
