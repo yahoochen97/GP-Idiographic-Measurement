@@ -94,7 +94,7 @@ def main(args):
         idx = TS.index(parts[1])
         test_mask = (idx*9<=train_x[:,1])
         test_mask = test_mask & (train_x[:,1]<(idx*9+9))
-        test_mask = torch.bernoulli(test_mask*0.5)
+        # test_mask = torch.bernoulli(test_mask*0.5)
         test_x = train_x[test_mask]
         test_y = train_y[test_mask]
         train_y = train_y[~test_mask]
