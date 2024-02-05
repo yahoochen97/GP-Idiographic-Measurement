@@ -26,13 +26,13 @@ def main(args):
  
     results = np.round(results, decimals=3)
 
-    results = pd.DataFrame(results[:,:,0], columns=PRED_TYPES)
-    results = results.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
-    print(results)
+    result = pd.DataFrame(results[:,:,0], columns=PRED_TYPES)
+    result = result.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
+    print(result)
 
-    results = pd.DataFrame(results[:,:,1], columns=PRED_TYPES)
-    results = results.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
-    print(results)
+    result = pd.DataFrame(results[:,:,1], columns=PRED_TYPES)
+    result = result.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
+    print(result)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='')
