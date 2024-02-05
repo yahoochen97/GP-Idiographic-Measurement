@@ -27,8 +27,7 @@ def main(args):
     results = np.round(results, decimals=3)
     
     def plot_result(results, TASK, MEASURE):
-        plt.close()
-        fig, ax = plt.figure(figsize=(6, 5))
+        fig, ax = plt.subplot(figsize=(6, 5))
         MODELS = ["IPGP-pop", "IPGP"]
         for i in range(len(MODELS)):
             plt.plot(range(1,6), results[i,:], label=MODELS[i])
@@ -49,6 +48,7 @@ def main(args):
         ax.spines['bottom'].set_visible(False)
         ax.spines['left'].set_visible(False)
         plt.savefig(RESULT_PATH+TASK + "_" + MEASURE +".pdf", bbox_inches='tight')
+        plt.close(fig=fig)
 
     plot_result(results, "last", "acc")
     plot_result(results, "last", "ll")
