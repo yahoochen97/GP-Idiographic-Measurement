@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
-
-MODELS = ["pop", "both"]
 PRED_TYPES = ["last_1", "last_2", "last_3", "last_4", "last_5",\
             "trait_E", "trait_A", "trait_O", "trait_N", "trait_C"]
 
@@ -14,6 +12,7 @@ RESULT_PATH = "./results/GP_ESM/prediction/"
 
 def main(args):
 
+    MODELS = ["pop", "both"]
     MEASURES = ["test_acc", "test_ll"]
     results = np.zeros((len(MODELS), len(PRED_TYPES), len(MEASURES)))
 
