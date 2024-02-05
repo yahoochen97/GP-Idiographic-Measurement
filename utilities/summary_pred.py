@@ -47,8 +47,6 @@ def main(args):
     result = result.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
     plt.close()
     plt.figure(figsize=(6, 5))
-    plt.rcParams['text.usetex'] = True
-    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
     MODELS = ["IPGP-pop", "IPGP"]
     for i in range(len(MODELS)):
         plt.plot(range(5), results[i,:,1], label=MODELS[i])
