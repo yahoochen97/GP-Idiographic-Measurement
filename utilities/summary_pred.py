@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import argparse
 
-from util import correlation_matrix_distance, plot_task_kernel
-
 MODELS = ["pop", "both"]
 PRED_TYPES = ["last_1", "last_2", "last_3", "last_4", "last_5",\
             "trait_E", "trait_A", "trait_O", "trait_N", "trait_C"]
