@@ -31,8 +31,6 @@ def main(args):
     
     plt.close()
     plt.figure(figsize=(6, 5))
-    plt.rcParams['text.usetex'] = True
-    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
     MODELS = ["IPGP-pop", "IPGP"]
     for i in range(len(MODELS)):
         plt.plot(range(5), results[i,:,0], label=MODELS[i])
