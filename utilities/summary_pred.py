@@ -27,7 +27,7 @@ def main(args):
     results = np.round(results, decimals=3)
     
     def plot_result(results, TASK, MEASURE):
-        fig, ax = plt.subplot(figsize=(6, 5))
+        fig, ax = plt.subplots(figsize=(6, 5))
         MODELS = ["IPGP-pop", "IPGP"]
         for i in range(len(MODELS)):
             plt.plot(range(1,6), results[i,:], label=MODELS[i])
