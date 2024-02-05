@@ -140,20 +140,15 @@ def main(args):
     likelihood.eval()
     print("start predicting...")
 
-    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader)
+    # train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader)
     test_acc, test_ll = evaluate_gpr(model, likelihood, test_loader, mll)
 
     results = {}
-    print("in-sample evaluatiion...")
-    print("train acc: {}".format(train_acc))
-    print("train ll: {}".format(train_ll))
     print("out-of-sample evaluatiion...")
     print("test acc: {}".format(test_acc))
     print("test ll: {}".format(test_ll))
 
-    log_lik = train_ll * train_x.size(0)
-    results["train_acc"] = train_acc
-    results["train_ll"] = train_ll
+    log_lik = test_ll * test_x.size(0)
     results["test_acc"] = test_acc
     results["test_ll"] = test_ll
     results["log_lik"] = log_lik
