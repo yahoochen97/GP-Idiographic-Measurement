@@ -32,7 +32,7 @@ def main(args):
         MODELS = ["IPGP-pop", "IPGP"]
         colors = ["orange", "blue"]
         for j in range(len(MODELS)):
-            plt.plot(range(1,6), results[j,:], label=MODELS[j], color=colors[j])
+            ax.plot(range(1,6), results[j,:], label=MODELS[j], color=colors[j])
         plt.ylim([0.2, 0.5])
         if i==1:
             plt.legend(loc=0, fontsize=20)
