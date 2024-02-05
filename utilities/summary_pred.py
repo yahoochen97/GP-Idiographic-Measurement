@@ -28,7 +28,7 @@ def main(args):
     
     def plot_result(results, TASK, MEASURE):
         plt.close()
-        fig, ax = plt.subplots(figsize=(6, 5))
+        fig, ax = plt.figure(figsize=(6, 5))
         MODELS = ["IPGP-pop", "IPGP"]
         for i in range(len(MODELS)):
             plt.plot(range(1,6), results[i,:], label=MODELS[i])
