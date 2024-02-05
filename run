@@ -13,29 +13,29 @@ declare -a TYPES=("pop" "ind" "both" "graded_multi" "gpcm_multi" "sequential_mul
 declare -a FACTORS=(5)
 
 declare -a TYPES=("pop" "ind" "both" "Gaussian")
-declare -a TYPES=("both")
+declare -a TYPES=("both_prior")
 
 if [ $1 = "run" ]
 then
-    # for SEED in $(seq 1 1 $MAXSEED); do
-    #     for TYPE in ${TYPES[@]}; do
-    #         bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${RANK}"
-    #     done
-    # done
-
-    declare -a TYPES=("both_prior")
-    declare -a FACTORS=(2)
     for SEED in $(seq 1 1 $MAXSEED); do
         for TYPE in ${TYPES[@]}; do
-            for FACTOR in ${FACTORS[@]}; do
-                bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${FACTOR}"
-            done
+            bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}r${RANK}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${RANK}"
         done
     done
+
+    # declare -a TYPES=("both_prior")
+    # declare -a FACTORS=(2)
+    # for SEED in $(seq 1 1 $MAXSEED); do
+    #     for TYPE in ${TYPES[@]}; do
+    #         for FACTOR in ${FACTORS[@]}; do
+    #             bsub -G SEAS-Lab-Garnett -o "log/n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}.log" -J "n${n}m${m}t${t}seed${SEED}f${FACTOR}${TYPE}" "./onerun ${n} ${m} ${t} ${SEED} ${RANK} ${TYPE} ${FACTOR}"
+    #         done
+    #     done
+    # done
 elif [ $1 = "summary" ]
 then
     python utilities/summary.py -n 10 -m 20 -t 30 -r 5 -s 25
-    # python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
+    python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
 elif [ $1 = "loopr" ]
 then
     declare -a FACTORS=(1)
@@ -53,6 +53,15 @@ then
     for MODEL in ${MODELS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
             bsub -G SEAS-Lab-Garnett -o "log/ESM_${MODEL}_${FACTOR}.log" -J "ESM_${MODEL}_${FACTOR}" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
+        done
+    done
+elif [ $1 = "ESM_pred" ]
+then
+    declare -a MODELS=("both" "pop")
+    declare -a PRED_TYPES=("last_1" "last_2" "last_3" "last_4" "last_5" "trait_E" "trait_A" "trait_O" "trait_N" "trait_C")
+    for MODEL in ${MODELS[@]}; do
+        for PRED_TYPE in ${PRED_TYPES[@]}; do
+            bsub -G SEAS-Lab-Garnett -o "log/pred_${MODEL}_${PRED_TYPE}.log" -J "pred_${MODEL}_${PRED_TYPE}" "module add seas-lab-vorobeychik;python GP_ESM_pred.py -k ${MODEL} -p ${PRED_TYPE} -s 0"
         done
     done
 fi

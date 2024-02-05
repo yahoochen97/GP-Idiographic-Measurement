@@ -200,6 +200,8 @@ def main(args):
       
     if isinstance(likelihood, GaussianLikelihood):
         model_type = "Gaussian"
+    if fix_prior=="prior":
+        model_type="both_prior"
     PATH = "./results/synthetic/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)

@@ -423,6 +423,6 @@ if __name__=="__main__":
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
     # main(args)
-    plot_unit_cor_matrix()
-    # cluster_analysis()
+    # plot_unit_cor_matrix()
+    cluster_analysis()
     # SEM()

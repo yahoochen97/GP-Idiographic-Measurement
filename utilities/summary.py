@@ -30,7 +30,7 @@ def main(args):
         dgp_pop_loadings = dgp_loadings["pop_loadings"]
         dgp_unit_loadings = dgp_loadings["unit_loadings"]
         for i in range(len(MODELS)):
-            if i<3:
+            if i<4:
                 cov_file = "cov_{}_n{}_m{}_t{}_rank{}_SEED{}.npz".format(MODELS[i], n,m,horizon,RANK,SEED_)
                 data = np.load(RESULT_PATH + cov_file)
             else:
@@ -49,7 +49,7 @@ def main(args):
                 else:
                     dgp_covariance = dgp_pop_loadings.T  @ dgp_pop_loadings + \
                         dgp_unit_loadings[unit_i].T @ dgp_unit_loadings[unit_i]
-                if i<3:
+                if i<4:
                     unit_cov = data["unit_{}_covariance".format(unit_i)]
                 else:
                     unit_cov = np.array(data["correlation_matrix"])

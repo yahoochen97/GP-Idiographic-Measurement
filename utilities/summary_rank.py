@@ -6,7 +6,7 @@ import argparse
 from util import correlation_matrix_distance, plot_task_kernel
 
 MODEL = "both"
-FACTORS = [2,5,8]
+FACTORS = [2,5]
 
 RESULT_PATH = "./results/synthetic/"
 DGP_PATH = "./data/synthetic/"

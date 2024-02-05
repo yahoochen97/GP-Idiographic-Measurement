@@ -593,6 +593,7 @@ def plot_agg_task_kernel(task_kernel, pop_kernel, file_name):
     task_kernel = cov_to_corr(task_kernel)
     pop_kernel = cov_to_corr(pop_kernel)
     task_kernel = task_kernel - pop_kernel
+    task_kernel = np.round(task_kernel, decimals=3) + 0.
 
     categories = ["E","A","C","N","O"]
     
@@ -600,7 +601,8 @@ def plot_agg_task_kernel(task_kernel, pop_kernel, file_name):
 
     norm = plt.Normalize(-0.5, 0.5)
     sns.heatmap(task_kernel,xticklabels=categories, \
-                yticklabels=categories, cmap=colormap, norm=norm)
+                yticklabels=categories, cmap=colormap, \
+                norm=norm, annot=True, fmt=".3f", annot_kws={"fontsize":32})
     plt.xticks(fontsize=32)
     plt.yticks(fontsize=32) 
     plt.tick_params(left=False, bottom=False)
