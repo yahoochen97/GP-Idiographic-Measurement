@@ -80,7 +80,7 @@ def main(args):
     train_y = train_y[train_y!=0]
 
     # split train/test for forecasting
-    parts = pred_type.split("")
+    parts = pred_type.split("_")
     if parts[0]=="last":
         test_mask = (horizon-int(parts[1]))<=train_x[:,2]
         test_mask = test_mask & (train_x[:,2]<(horizon-int(parts[1])+1))
@@ -120,13 +120,12 @@ def main(args):
 
     # initialize covariance of pop factors
     pop_prior = np.load("./results/GP_ESM/both_f1_Feb.npz")
-    loopr_idx = [Items_loopr.index(x) for x in ESM_items]
-    model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
+    model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"])
     
     if model_type=="both":
         pop_kernel =  model.pop_task_covar_module.covar_matrix.evaluate()
         for i in range(n):
-            unit_cov =  torch.tensor(pop_prior["unit_{}_covariance".format(i)][loopr_idx])
+            unit_cov =  torch.tensor(pop_prior["unit_{}_covariance".format(i)])
             unit_cov = pop_kernel - unit_cov
             U, S, V = torch.pca_lowrank(unit_cov.double(), q = 1)
             X_init = U.matmul(S).reshape((-1,1)) @ V.T
