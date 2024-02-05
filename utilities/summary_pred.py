@@ -25,40 +25,34 @@ def main(args):
             results[i,j,1] = data["test_ll"]
  
     results = np.round(results, decimals=3)
-
-    result = pd.DataFrame(results[:,:,0], columns=PRED_TYPES)
-    result = result.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
     
-    plt.close()
-    plt.figure(figsize=(6, 5))
-    MODELS = ["IPGP-pop", "IPGP"]
-    for i in range(len(MODELS)):
-        plt.plot(range(5), results[i,:,0], label=MODELS[i])
-    plt.ylim([0.2, 0.5])
-    plt.legend(loc=0, fontsize=24)
-    plt.xticks(fontsize=24)
-    plt.yticks(fontsize=24) 
-    plt.xlabel("horizon (days)", fontsize=24)
-    plt.tick_params(bottom=False)
-    plt.ylabel("predictive acc", fontsize=24)
-    plt.savefig(RESULT_PATH+"last_acc.pdf", bbox_inches='tight')
+    def plot_result(results, TASK, MEASURE):
+        plt.close()
+        fig, ax = plt.subplots(figsize=(6, 5))
+        MODELS = ["IPGP-pop", "IPGP"]
+        for i in range(len(MODELS)):
+            plt.plot(range(1,6), results[i,:], label=MODELS[i])
+        plt.ylim([0.2, 0.5])
+        plt.legend(loc=0, fontsize=20)
+        XTICKS = [1,2,3,4,5]
+        YTICKS = [0.2, 0.3, 0.4, 0.5]
+        if MEASURE=="ll":
+            YTICKS = [-1.9, -1.7,-1.5,-1.3]
+        plt.xticks(XTICKS,XTICKS, fontsize=20)
+        plt.yticks(YTICKS, YTICKS, fontsize=20) 
+        plt.xlabel("horizon (days)", fontsize=20)
+        plt.tick_params(bottom=False)
+        plt.ylabel("predictive " + MEASURE, fontsize=20)
+        ax.grid(axis='y')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        plt.savefig(RESULT_PATH+TASK + "_" + MEASURE +".pdf", bbox_inches='tight')
 
-    result = pd.DataFrame(results[:,:,1], columns=PRED_TYPES)
-    result = result.rename(index=dict(zip([i for i in range(len(MODELS))], MODELS)))
-    plt.close()
-    plt.figure(figsize=(6, 5))
-    MODELS = ["IPGP-pop", "IPGP"]
-    for i in range(len(MODELS)):
-        plt.plot(range(5), results[i,:,1], label=MODELS[i])
-    plt.ylim([0.2, 0.5])
-    plt.legend(loc=0, fontsize=24)
-    plt.xticks(fontsize=24)
-    plt.yticks(fontsize=24) 
-    plt.tick_params(bottom=False)
-    plt.xlabel("horizon (days)", fontsize=24)
-    plt.ylabel("predictive ll", fontsize=24)
-    plt.savefig(RESULT_PATH+"last_ll.pdf", bbox_inches='tight')
-
+    plot_result(results, "last", "acc")
+    plot_result(results, "last", "ll")
+   
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='')
     args = vars(parser.parse_args())
