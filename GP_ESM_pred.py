@@ -23,7 +23,7 @@ from utilities.util import correlation_matrix_distance, evaluate_gpr
 def main(args):
     SEED = int(args["seed"])
     pred_type = args["pred_type"]
-    load_batch_size = 512
+    load_batch_size = 128
     num_inducing = 5000
     model_type = args["model_type"]
     print("loading data...")
@@ -94,7 +94,7 @@ def main(args):
         idx = TS.index(parts[1])
         test_mask = (idx*9<=train_x[:,1])
         test_mask = test_mask & (train_x[:,1]<(idx*9+9))
-        # test_mask = torch.bernoulli(test_mask*0.5)
+        test_mask = torch.bernoulli(test_mask*0.2).bool()
         test_x = train_x[test_mask]
         test_y = train_y[test_mask]
         train_y = train_y[~test_mask]
