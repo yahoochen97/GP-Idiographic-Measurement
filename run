@@ -59,7 +59,7 @@ elif [ $1 = "ESM_pred" ]
 then
     declare -a MODELS=("both" "pop")
     declare -a PRED_TYPES=("last_1" "last_2" "last_3" "last_4" "last_5" "trait_E" "trait_A" "trait_O" "trait_N" "trait_C")
-    declare -a PRED_TYPES=("last_1" "last_2" "last_3" "last_4" "last_5")
+    declare -a PRED_TYPES=("trait_E" "trait_A" "trait_O" "trait_N" "trait_C")
     for MODEL in ${MODELS[@]}; do
         for PRED_TYPE in ${PRED_TYPES[@]}; do
             bsub -G SEAS-Lab-Garnett -o "log/pred_${MODEL}_${PRED_TYPE}.log" -J "pred_${MODEL}_${PRED_TYPE}" "module add seas-lab-vorobeychik;python GP_ESM_pred.py -k ${MODEL} -p ${PRED_TYPE} -s 0"
