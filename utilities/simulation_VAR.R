@@ -60,6 +60,7 @@ tvvar_obj <- tvmvar(data = DSEM_data,
 
 correlation_matrix = tvvar_obj$wadj[,,1,1]*tvvar_obj$signs[,,1,1]
 correlation_matrix[is.na(correlation_matrix)] = 0
+correlation_matrix = (correlation_matrix + t(correlation_matrix)) / 2
 loadings = NULL
 
 pred_obj <- predict(object = tvvar_obj, 

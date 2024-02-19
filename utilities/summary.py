@@ -7,7 +7,7 @@ import pyreadr
 from util import correlation_matrix_distance, plot_task_kernel
 
 MODELS = ["pop", "ind", "both", "Gaussian", "graded_uni",\
-           "gpcm_multi", "sequential_multi"]
+           "gpcm_multi", "sequential_multi", "DSEM", "TVAR"]
 
 RESULT_PATH = "./results/synthetic/"
 DGP_PATH = "./data/synthetic/"
@@ -39,8 +39,10 @@ def main(args):
             
             results[i,0,SEED] = np.array(data["train_acc"])
             results[i,1,SEED] = np.array(data["train_ll"])
-            results[i,2,SEED] = np.array(data["test_acc"])
-            results[i,3,SEED] = np.array(data["test_ll"])
+            if "test_acc" in data:
+                results[i,2,SEED] = np.array(data["test_acc"])
+            if "test_ll" in data:
+                results[i,3,SEED] = np.array(data["test_ll"])
             unit_dist = 0
             for unit_i in range(n):
                 if i==0:

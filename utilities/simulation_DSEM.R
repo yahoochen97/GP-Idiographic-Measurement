@@ -86,9 +86,10 @@ pred_y = (pred_y-min(pred_y)+1)/(max(pred_y)-min(pred_y))*(C-1)
 pred_y = round(pred_y, digits = 0)
 
 train_acc = mean(pred_y[train_mask==1]==train_data[train_mask==1])
-test_acc = mean(pred_y[train_mask==0]==train_data[train_mask==0])
 train_ll = log_lik / n / m / horizon
 test_ll = train_ll 
+test_acc = NULL
+test_ll = NULL
 
 save(loadings, correlation_matrix, log_lik, BIC, thetas,train_acc, train_ll,test_acc, test_ll,
      file=paste("./results/synthetic/", TYPE,"_", HYP, ".RData" , sep=""))
