@@ -52,7 +52,7 @@ then
     declare -a TYPES=("graded_multi" "gpcm_multi" "sequential_multi")
     for TYPE in ${TYPES[@]}; do
         for FACTOR in ${FACTORS[@]}; do
-            bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "Rscript --vanilla loopr_MIRT.R $FACTOR $TYPE"
+            bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "Rscript --vanilla utilities/loopr_MIRT.R $FACTOR $TYPE"
         done
     done
 elif [ $1 = "ESM" ]
