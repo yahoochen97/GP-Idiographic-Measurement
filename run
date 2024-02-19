@@ -40,12 +40,19 @@ then
     python utilities/summary_rank.py -n 10 -m 20 -t 30 -r 5 -s 25
 elif [ $1 = "loopr" ]
 then
-    declare -a FACTORS=(1)
-    declare -a EPOCHS=(0 10)
-    TYPE="pop"
-    for EPOCH in ${EPOCHS[@]}; do
+    # declare -a FACTORS=(1)
+    # declare -a EPOCHS=(0 10)
+    # TYPE="pop"
+    # for EPOCH in ${EPOCHS[@]}; do
+    #     for FACTOR in ${FACTORS[@]}; do
+    #         python loopr.py -k $TYPE -f $FACTOR -e $EPOCH
+    #     done
+    # done
+    declare -a FACTORS=(1 2 3 4 5)
+    declare -a TYPES=("graded_multi" "gpcm_multi" "sequential_multi")
+    for TYPE in ${TYPES[@]}; do
         for FACTOR in ${FACTORS[@]}; do
-            python loopr.py -k $TYPE -f $FACTOR -e $EPOCH
+            bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "Rscript --vanilla loopr_MIRT.R $FACTOR $TYPE"
         done
     done
 elif [ $1 = "ESM" ]

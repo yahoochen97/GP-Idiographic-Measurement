@@ -67,6 +67,8 @@ def main(args):
     _, _, V = torch.pca_lowrank(cov, q = FACTOR)
     model.pop_task_covar_module.covar_factor.data = 4*torch.matmul(cov, V[:,:FACTOR])
 
+    
+
     # fix time length scale
     for i in range(1):
         model.t_covar_module[i].lengthscale = 1

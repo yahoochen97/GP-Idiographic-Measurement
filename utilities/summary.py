@@ -55,6 +55,9 @@ def main(args):
                     unit_cov = data["unit_{}_covariance".format(unit_i)]
                 else:
                     unit_cov = np.array(data["correlation_matrix"])
+                if i==8:
+                    if unit_cov[0,0]==0:
+                        unit_cov = np.sign(unit_cov[0,1]) * unit_cov
                 unit_dist += correlation_matrix_distance(dgp_covariance, unit_cov)
             results[i,4,SEED] = unit_dist / n
     
