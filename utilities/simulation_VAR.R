@@ -51,9 +51,9 @@ tvvar_obj <- tvmvar(data = DSEM_data,
                     type = rep("g", m),
                     level = rep(1, m), 
                     lambdaSel = "CV",
-                    estpoints =  seq(0, 1, length = 1),
+                    estpoints =  seq(0, 1, length = horizon),
                     timepoints = rep(1:horizon, each=n)/horizon,
-                    bandwidth = 1,
+                    bandwidth = 0.25,
                     lags = 1,
                     scale = TRUE,
                     pbar = TRUE)
@@ -61,6 +61,9 @@ tvvar_obj <- tvmvar(data = DSEM_data,
 correlation_matrix = tvvar_obj$wadj[,,1,1]*tvvar_obj$signs[,,1,1]
 correlation_matrix[is.na(correlation_matrix)] = 0
 correlation_matrix = (correlation_matrix + t(correlation_matrix)) / 2
+if (correlation_matrix[1,1]<0){
+  correlation_matrix = -correlation_matrix
+}
 loadings = NULL
 
 pred_obj <- predict(object = tvvar_obj, 
