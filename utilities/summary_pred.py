@@ -5,8 +5,8 @@ import argparse
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-PRED_TYPES = ["last_1", "last_2", "last_3", "last_4", "last_5",\
-            "trait_E", "trait_A", "trait_O", "trait_N", "trait_C"]
+PRED_TYPES = ["last_2", "last_1", "last_3", "last_4", "last_5",\
+            "trait_A", "trait_O", "trait_E", "trait_C", "trait_N"]
 
 RESULT_PATH = "./results/GP_ESM/prediction/"
 
@@ -23,27 +23,32 @@ def main(args):
 
             results[i,j,0] = data["test_acc"]
             results[i,j,1] = data["test_ll"]
+    results[:,6:8,1] = np.flip(results[:,6:8,1],axis=0)
+
+    print(np.sum(results[0,0:5,1] - results[1,0:5,1]) * 3000/5)
+    print(np.sum(results[0,6:,1] - results[1,6:,1]) * 52620/5)
  
     results = np.round(results, decimals=3)
-    fig, axs = plt.subplots(figsize=(8, 8), nrows=2, ncols=2)
+    fig, axs = plt.subplots(figsize=(8, 6), nrows=2, ncols=2)
     
-    MEASURES = ["acc", "ll"]
+    MEASURES = ["acc", "log lik"]
     for i in range(len(MEASURES)):
         for k in range(2):
             MEASURE = MEASURES[i]
             ax = axs[i,k]
-            MODELS = ["IPGP-pop", "IPGP"]
+            MODELS = ["IPGP-NOM", "IPGP"]
             colors = ["orange", "blue"]
             for j in range(len(MODELS)):
                 ax.plot(range(1,6), results[j,(k*5):(k*5+5),i], label=MODELS[j], color=colors[j])
             
             XTICKS = [1,2,3,4,5]
-            if i==1:
+            if k==1:
+                ax.set_xticks(XTICKS, ["A", "O", "E", "C", "N"])
+            else:
                 ax.set_xticks(XTICKS, XTICKS)
-                if k==1:
-                    ax.set_xticks(XTICKS, ["E", "A", "O", "N", "C"])
+                ax.set_xlabel("forcast day(s)", fontsize=16)
             YTICKS = [0.2, 0.3, 0.4, 0.5]
-            if MEASURE=="ll":
+            if MEASURE=="log lik":
                 YTICKS = [-1.8, -1.6,-1.4,-1.2]
                 ax.set_ylim([-1.8, -1.2])
                 if k==1:
@@ -59,18 +64,16 @@ def main(args):
             ax.set_yticks(YTICKS, YTICKS)
             ax.tick_params(axis="x", labelsize=12)
             ax.tick_params(axis="y", labelsize=12) 
-            if k==0:
-                ax.set_xlabel("horizon (days)", fontsize=16)
-            else:
-                ax.set_xlabel("traits (Big Five)", fontsize=16)
+            
+            if k==1:
+                ax.set_xlabel("leave-one-out trait", fontsize=16)
             ax.tick_params(left=False, bottom=False)
             if k==0:
-                ax.set_ylabel("predictive " + MEASURE, fontsize=20)
-
+                ax.set_ylabel("predictive " + MEASURE, fontsize=16)
             if i==1 and k==1:
                 lines = [Line2D([0], [0], color=c, linewidth=1, linestyle='-') for c in colors]
                 ax.legend(lines, MODELS, loc=0, fontsize=12)
-            else:
+            if i==0:
                 ax.get_xaxis().set_visible(False)
             ax.grid(axis='y')
             ax.spines['top'].set_visible(False)

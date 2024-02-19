@@ -364,9 +364,14 @@ def cluster_analysis():
             '#abd9e9',
             '#74add1',
             '#4575b4']
+    
+    import mantel
     for k in range(K):
+        mant = mantel.test(centroids[0], centroids[k], perms=10000, method='pearson', tail='upper')
+        print(mant.summary())
         print("cluster {}: ".format(k+1))
         print(np.arange(1,n+1)[assignments==k])
+        print(len(np.arange(1,n+1)[assignments==k]))
  
     # Add empty bars to the end of each group
     PAD = 1
