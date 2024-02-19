@@ -17,7 +17,7 @@ if [[ $TYPE == "both_prior" ]]; then
 elif [[ $TYPE == "DSEM" ]]; then
     Rscript --vanilla utilities/simulation_DSEM.R ${n} ${m} ${t} ${RANK} ${SEED} ${TYPE}
 elif [[ $TYPE == "TVAR" ]]; then
-    Rscript --vanilla utilities/simulation_TVAR.R ${n} ${m} ${t} ${RANK} ${SEED} ${TYPE}
+    Rscript --vanilla utilities/simulation_VAR.R ${n} ${m} ${t} ${RANK} ${SEED} ${TYPE}
 elif [[ $TYPE == *"_"* ]]; then
     Rscript --vanilla utilities/simulation_MIRT.R ${n} ${m} ${t} ${RANK} ${SEED} ${TYPE}
 else
