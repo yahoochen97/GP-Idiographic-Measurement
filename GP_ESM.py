@@ -184,10 +184,11 @@ def main(args):
         unit_covariance[i] = task_kernel
         results["unit_{}_covariance".format(i)] = task_kernel
 
+    PATH = "./results/GP_ESM/"
     if isinstance(likelihood, GaussianLikelihood):
         model_type = "Gaussian"
+        PATH = "./results/GP_ESM/baselines/"
 
-    PATH = "./results/GP_ESM/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     np.savez(PATH+"{}_f{}.npz".format(model_type, FACTOR), **results)
