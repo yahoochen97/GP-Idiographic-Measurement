@@ -84,9 +84,12 @@ then
     done
 elif [ $1 = "ESM_baseline" ]
 then
-    declare -a FACTORS=(5 1 1 1)
-    declare -a TYPES=("sem" "graded_multi" "gpcm_multi" "sequential_multi")
-    for j in $(seq 0 1 3); do
+    declare -a FACTORS=(5 1 1 1 1)
+    declare -a TYPES=("sem" "graded_multi" "gpcm_multi" "sequential_multi" "TVAR")
+    declare -a FACTORS=(1)
+    declare -a TYPES=("TVAR")
+    
+    for j in $(seq 0 1 1); do
         TYPE=${TYPES[$j]}
         FACTOR=${FACTORS[$j]}
         bsub -G SEAS-Lab-Garnett -o "log/ESM_${TYPE}_${FACTOR}.log" -J "ESM_${TYPE}_${FACTOR}" "Rscript --vanilla utilities/ESM_MIRT.R $FACTOR $TYPE"

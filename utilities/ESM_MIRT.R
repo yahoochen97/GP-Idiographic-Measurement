@@ -23,7 +23,6 @@ library(lavaan)
 data = read.csv("./data/GP_ESM.csv")
 m = 45
 
-
 if(TYPE=="sem"){
   C = 5
   train_data = data[,1:m]
@@ -60,6 +59,33 @@ if(TYPE=="sem"){
   
   
   write.csv(loadings, file=paste("./results/loopr/", TYPE,"_", RANK, ".csv" , sep=""))
+}else if(TYPE=="TVAR"){
+  library(mgm)
+  train_data = data[,1:m]
+  horizon = max(data$day)
+  tvvar_obj <- tvmvar(data = train_data,
+                      type = rep("g", m),
+                      level = rep(1, m), 
+                      lambdaSel = "CV",
+                      estpoints =  seq(0, 1, length = horizon),
+                      timepoints = rep(1:horizon, each=n)/horizon,
+                      bandwidth = 0.25,
+                      lags = 1,
+                      scale = TRUE,
+                      pbar = TRUE)
+  
+  
+  pred_obj <- predict(object = tvvar_obj, 
+                      data = train_data, 
+                      errorCon = c("R2", "RMSE"),
+                      tvMethod = "weighted")
+  
+  pred_y = pred_obj$predicted
+  pred_y = (pred_y-min(pred_y)+1)/(max(pred_y)-min(pred_y))*(C-1)
+  pred_y = round(pred_y, digits = 0)
+  
+  train_acc = mean(pred_y==train_data[2:nrow(data),])
+  train_ll = mean(log(dnorm(pred_y-train_data[2:nrow(data),])))
 }else{
   train_data = data
   test_data = data
