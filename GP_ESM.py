@@ -186,7 +186,7 @@ def main(args):
 
     if isinstance(likelihood, GaussianLikelihood):
         model_type = "Gaussian"
-        
+
     PATH = "./results/GP_ESM/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
@@ -205,12 +205,6 @@ def plot_unit_cor_matrix():
 
     # generate item map from original to current using ESM codebook
     codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
-    # reverse_code = codebook.iloc[:,2].to_list()
-    # reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
-    # reverse_code = np.array(reverse_code)#.reshape(-1,1)
-    # reverse_mask = np.ones((reverse_code.shape[0],reverse_code.shape[0]))
-    # reverse_mask[reverse_code==1,:] *= -1
-    # reverse_mask[:,reverse_code==1] *= -1
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
     n = data.PID.unique().shape[0]
@@ -260,40 +254,6 @@ def plot_unit_cor_matrix():
             parts2 = parts2[0]
             plt.savefig("./results/GP_ESM/both_pair_item/" + parts1 + "_" + parts2 + ".pdf", bbox_inches='tight')
 
-def SEM():
-    PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_5.npz")
-
-    data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
-    Items_loopr = data.columns.to_list()
-
-    # rename volat to violat
-    for i in range(1,5):
-        Items_loopr[Items_loopr.index("Volat.{}".format(i))] = "Violat.{}".format(i)
-
-    # generate item map from original to current using ESM codebook
-    codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
-    ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
-    SEM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") not in Items_loopr]
-    
-    data = pd.read_csv("./data/GP_ESM_cleaned.csv")
-    SEM_items_abbr = codebook[codebook.Original_Item_Name.isin(SEM_items)].Current_Variable_Name.to_list()
-    data = data[SEM_items_abbr + ['RecordedDate', 'PID']]
-    for j in range(len(ESM_items)):
-        data["x_{}".format(j)] = 0
-
-    n = data.PID.unique().shape[0]
-    recordeddates = data.RecordedDate.unique()
-    horizon = recordeddates.shape[0]
-    for i in range(1):
-        task_kernel = results["unit_{}_covariance".format(i)]
-        U, S, _ = np.linalg.svd(task_kernel)
-
-        for h in range(horizon):
-            mask = (data.PID==i) & (data.RecordedDate==recordeddates[h])
-            if data[mask].shape[0]>0:
-                for j in range(len(ESM_items)):
-                    data[mask, "x_{}".format(j)] = 0
 
 def cluster_analysis():
     PATH = "./results/GP_ESM/"
