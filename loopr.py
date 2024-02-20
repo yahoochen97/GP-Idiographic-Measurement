@@ -81,7 +81,6 @@ def main(args):
         tmp = pd.read_csv("./results/loopr/SEM_{}.csv".format(FACTOR), index_col=[0]).to_numpy()
         model.pop_task_covar_module.covar_factor.data = 4*torch.tensor(tmp)
 
-
     # fix time length scale
     for i in range(1):
         model.t_covar_module[i].lengthscale = 1
@@ -131,8 +130,11 @@ def main(args):
     results["BIC"] = num_params*np.log(train_x.size(0)) - 2*log_lik 
     results["pop_covariance"] = task_kernel
     results["pop_factor"] = model.pop_task_covar_module.covar_factor.data.detach().numpy()
-    cov_file = "loopr_pop_f{}_e{}.npz".format(FACTOR, num_epochs)
+    cov_file = "loopr_pop_{}_f{}_e{}.npz".format(init_type, FACTOR, num_epochs)
     np.savez(directory+cov_file, **results)
+
+    if init_type!="PCA":
+        return
 
     file_name = directory + "/loopr_pop_f{}_e{}.pdf".format(FACTOR, num_epochs)
     item_order = ["Sociab.1", "Sociab.2", "Sociab.3", "Sociab.4",
@@ -208,7 +210,7 @@ def model_comparison():
     FACTORS = [1,2,3,4,5]
     train_lls = np.zeros((3,2,len(FACTORS)))
     for i in range(len(FACTORS)):
-        results = np.load(PATH+"loopr_pop_f{}_e0.npz".format(FACTORS[i]))
+        results = np.load(PATH+"loopr_pop_sem_f{}_e0.npz".format(FACTORS[i]))
         train_ll = results["train_ll"] # * 207540
         train_lls[0,0,i] = train_ll
         train_lls[1,0,i] = results["train_acc"]

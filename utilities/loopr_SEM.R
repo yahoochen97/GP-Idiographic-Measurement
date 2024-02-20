@@ -3,7 +3,7 @@ args = commandArgs(trailingOnly=TRUE)
 options(show.error.locations = TRUE)
 
 if (length(args)==0) {
-  RANK = 5
+  RANK = 1
 }
 if (length(args)==1){
   RANK = as.integer(args[1])
@@ -14,7 +14,6 @@ TYPE = "SEM"
 R_path="~/R/x86_64-redhat-linux-gnu-library/4.0"
 .libPaths(R_path)
 library("lavaan")
-set.seed(SEED)
 
 # load data
 data = read.csv("./data/loopr_data.csv")
@@ -62,7 +61,7 @@ if (RANK==5){
 '
 }
 
-fit <- cfa(model = myModel, 
+fit <- sem(model = myModel, 
            data = data) 
 correlation_matrix = matrix(0, nrow = m, ncol=m)
 for (i in 1:m){
@@ -73,6 +72,7 @@ for (i in 1:m){
 }
 
 loadings = parameterEstimates(fit)[1:(m*RANK),"est"]
+loadings = matrix(loadings, nrow = m)
 
 correlation_matrix = loadings %*% t(loadings)
 write.csv(loadings, file=paste("./results/loopr/", TYPE,"_", RANK, ".csv" , sep=""))

@@ -52,6 +52,10 @@ def main(args):
     data["day"] = time_diff.days
     data["day"] += time_diff.seconds/60/60/25
 
+    # cols = [item_mapping[x] for x in ESM_items] + ["PID", "day"]
+    # data = data[cols]
+    # data.to_csv("./data/GP_ESM.csv", index=False)
+
     n = data.PID.unique().shape[0]
     m = len(ESM_items)
     horizon = data.day.max()
@@ -427,7 +431,7 @@ if __name__=="__main__":
     parser.add_argument('-k','--model_type', help='type of model', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    # main(args)
+    main(args)
     # plot_unit_cor_matrix()
-    cluster_analysis()
+    # cluster_analysis()
     # SEM()
