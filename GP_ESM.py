@@ -16,6 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from gpytorch.mlls import VariationalELBO
+from gpytorch.likelihoods import GaussianLikelihood
 from torch.utils.data import TensorDataset, DataLoader
 from utilities.util import OrdinalLMC, OrdinalLikelihood
 from utilities.util import correlation_matrix_distance, plot_task_kernel
@@ -89,7 +90,11 @@ def main(args):
 
     # initialize likelihood and model
     inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
-    likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
+    if model_type=="Gaussian":
+        likelihood = GaussianLikelihood()
+        model_type = "both"
+    else:
+        likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
     pop_rank = 5
     unit_rank = FACTOR
     if model_type=="pop":
@@ -179,6 +184,9 @@ def main(args):
         unit_covariance[i] = task_kernel
         results["unit_{}_covariance".format(i)] = task_kernel
 
+    if isinstance(likelihood, GaussianLikelihood):
+        model_type = "Gaussian"
+        
     PATH = "./results/GP_ESM/"
     if not os.path.exists(PATH):
         os.makedirs(PATH)
