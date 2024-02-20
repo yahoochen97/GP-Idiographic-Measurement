@@ -3,7 +3,7 @@ args = commandArgs(trailingOnly=TRUE)
 options(show.error.locations = TRUE)
 
 if (length(args)==0) {
-  RANK = 1
+  RANK = 5
 }
 if (length(args)==1){
   RANK = as.integer(args[1])
@@ -25,16 +25,45 @@ C = 5
 
 colnames(data) = unlist(lapply(1:m,function(i) paste("y",as.character(i), sep="")))
 
-myModel <- ' 
- # latent variables 
-   l1 =~ y1 + y2 + y3 + y4 
-   l2 =~ y5 + y6 + y7 + y8  
-   l3 =~ y9 + y10 + y11 + y12  
-   l4 =~ y13 + y14 + y15 + y16  
-   l5 =~ y17 + y18 + y19 + y20 
+if (RANK==1){
+  myModel <- '
+    q1 =~ y1 + y2 + y3 + y4 + y5 + y6 + y7 + y8 + y9 + y10 + y11 + y12 + y13 + y14 + y15 + y16 + y17 + y18 + y19 + y20 + y21 + y22 + y23 + y24 + y25 + y26 + y27 + y28 + y29 + y30 + y31 + y32 + y33 + y34 + y35 + y36 + y37 + y38 + y39 + y40 + y41 + y42 + y43 + y44 + y45 + y46 + y47 + y48 + y49 + y50 + y51 + y52 + y53 + y54 + y55 + y56 + y57 + y58 + y59 + y60
 '
-fit <- sem(model = myModel, 
-           data = train_data) 
+}
+if (RANK==2){
+  myModel <- '
+  q1 + q2 =~ y1 + y2 + y3 + y4 + y5 + y6 + y7 + y8 + y9 + y10 + y11 + y12 + y13 + y14 + y15 + y16 + y17 + y18 + y19 + y20 +
+   y21 + y22 + y23 + y24 + y25 + y26 + y27 + y28 + y29 + y30 + y31 + y32 + y33 + y34 + y35 + y36 + y37 + y38 + y39 + y40 +
+   y41 + y42 + y43 + y44 + y45 + y46 + y47 + y48 + y49 + y50 + y51 + y52 + y53 + y54 + y55 + y56 + y57 + y58 + y59 + y60
+'
+}
+if (RANK==3){
+  myModel <- '
+  q1 + q2 + q3 + q4 + q5 =~
+   y1 + y2 + y3 + y4 + y5 + y6 + y7 + y8 + y9 + y10 + y11 + y12 + y13 + y14 + y15 + y16 + y17 + y18 + y19 + y20 +
+   y21 + y22 + y23 + y24 + y25 + y26 + y27 + y28 + y29 + y30 + y31 + y32 + y33 + y34 + y35 + y36 + y37 + y38 + y39 + y40 +
+   y41 + y42 + y43 + y44 + y45 + y46 + y47 + y48 + y49 + y50 + y51 + y52 + y53 + y54 + y55 + y56 + y57 + y58 + y59 + y60
+'
+}
+if (RANK==4){
+  myModel <- '
+  q1 + q2 + q3 + q4 = ~
+   y1 + y2 + y3 + y4 + y5 + y6 + y7 + y8 + y9 + y10 + y11 + y12 + y13 + y14 + y15 + y16 + y17 + y18 + y19 + y20 +
+   y21 + y22 + y23 + y24 + y25 + y26 + y27 + y28 + y29 + y30 + y31 + y32 + y33 + y34 + y35 + y36 + y37 + y38 + y39 + y40 +
+   y41 + y42 + y43 + y44 + y45 + y46 + y47 + y48 + y49 + y50 + y51 + y52 + y53 + y54 + y55 + y56 + y57 + y58 + y59 + y60 
+'
+}
+if (RANK==5){
+  myModel <- '
+  q1 + q2 + q3 + q4 + q5 =~
+   y1 + y2 + y3 + y4 + y5 + y6 + y7 + y8 + y9 + y10 + y11 + y12 + y13 + y14 + y15 + y16 + y17 + y18 + y19 + y20 +
+   y21 + y22 + y23 + y24 + y25 + y26 + y27 + y28 + y29 + y30 + y31 + y32 + y33 + y34 + y35 + y36 + y37 + y38 + y39 + y40 +
+   y41 + y42 + y43 + y44 + y45 + y46 + y47 + y48 + y49 + y50 + y51 + y52 + y53 + y54 + y55 + y56 + y57 + y58 + y59 + y60
+'
+}
+
+fit <- cfa(model = myModel, 
+           data = data) 
 correlation_matrix = matrix(0, nrow = m, ncol=m)
 for (i in 1:m){
   for (j in 1:m){
@@ -43,25 +72,9 @@ for (i in 1:m){
   }
 }
 
-loadings = parameterEstimates(fit)[1:20,"est"]
+loadings = parameterEstimates(fit)[1:(m*RANK),"est"]
 
-log_lik = fitMeasures(fit)[["logl"]]
-BIC = BIC(fit)
-thetas = predict(fit, newdata = train_data)
+correlation_matrix = loadings %*% t(loadings)
+write.csv(loadings, file=paste("./results/loopr/", TYPE,"_", RANK, ".csv" , sep=""))
+# quit()
 
-pred_y = matrix(0, nrow = n*horizon, ncol=m)
-for (i in 1:(n*horizon)){
-  pred_y[i,] = rep( thetas[i,], each = m/5) * loadings
-}
-
-pred_y = (pred_y-min(pred_y)+1)/(max(pred_y)-min(pred_y))*(C-1)
-pred_y = round(pred_y, digits = 0)
-
-train_acc = mean(pred_y[train_mask==1]==train_data[train_mask==1])
-train_ll = log_lik / n / m / horizon
-test_ll = train_ll 
-test_acc = NULL
-test_ll = NULL
-
-save(loadings, correlation_matrix, log_lik, BIC, thetas,train_acc, train_ll,test_acc, test_ll,
-     file=paste("./results/synthetic/", TYPE,"_", HYP, ".RData" , sep=""))

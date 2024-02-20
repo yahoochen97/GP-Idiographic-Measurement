@@ -62,5 +62,5 @@ if(UNI=="uni"){
 }
 
 correlation_matrix = loadings %*% t(loadings)
-write.csv(correlation_matrix, file=paste("./results/loopr/", TYPE,"_", RANK, ".csv" , sep=""))
+write.csv(loadings, file=paste("./results/loopr/", TYPE,"_", RANK, ".csv" , sep=""))
 # quit()

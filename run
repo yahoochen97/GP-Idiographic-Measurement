@@ -55,6 +55,14 @@ then
             bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "Rscript --vanilla utilities/loopr_MIRT.R $FACTOR $TYPE"
         done
     done
+    # declare -a FACTORS=(1 2 3 4 5)
+    # declare -a EPOCHS=(0)
+    # TYPE="pop"
+    # for EPOCH in ${EPOCHS[@]}; do
+    #     for FACTOR in ${FACTORS[@]}; do
+    #         python loopr.py -k $TYPE -f $FACTOR -e $EPOCH
+    #     done
+    # done
 elif [ $1 = "ESM" ]
 then
     declare -a FACTORS=(1)

@@ -21,6 +21,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel, evalua
 
 def main(args):
     FACTOR = int(args["factor"])
+    init_type = args["init_type"]
     model_type = args["model_type"]
     # load data
     load_batch_size = 512
@@ -63,11 +64,23 @@ def main(args):
     likelihood.train()
 
     # initialize covariance of pop factors
-    cov = torch.tensor(data.corr().to_numpy())
-    _, _, V = torch.pca_lowrank(cov, q = FACTOR)
-    model.pop_task_covar_module.covar_factor.data = 4*torch.matmul(cov, V[:,:FACTOR])
+    if init_type=="PCA":
+        cov = torch.tensor(data.corr().to_numpy())
+        _, _, V = torch.pca_lowrank(cov, q = FACTOR)
+        model.pop_task_covar_module.covar_factor.data = 4*torch.matmul(cov, V[:,:FACTOR])
+    elif init_type=="gpcm":
+        tmp = pd.read_csv("./results/loopr/gpcm_multi_{}.csv".format(FACTOR), index_col=[0]).to_numpy()
+        model.pop_task_covar_module.covar_factor.data = 4*torch.tensor(tmp)
+    elif init_type=="grm":
+        tmp = pd.read_csv("./results/loopr/graded_multi_{}.csv".format(FACTOR), index_col=[0]).to_numpy()
+        model.pop_task_covar_module.covar_factor.data = 4*torch.tensor(tmp)
+    elif init_type=="srm":
+        tmp = pd.read_csv("./results/loopr/sequential_multi_{}.csv".format(FACTOR), index_col=[0]).to_numpy()
+        model.pop_task_covar_module.covar_factor.data = 4*torch.tensor(tmp)
+    elif init_type=="sem":
+        tmp = pd.read_csv("./results/loopr/SEM_{}.csv".format(FACTOR), index_col=[0]).to_numpy()
+        model.pop_task_covar_module.covar_factor.data = 4*torch.tensor(tmp)
 
-    
 
     # fix time length scale
     for i in range(1):
@@ -224,8 +237,9 @@ def model_comparison():
 
 
 if __name__=="__main__":
-    parser = argparse.ArgumentParser(description='-k model_type -f factor -e epoch')
+    parser = argparse.ArgumentParser(description='-k model_type -i init_type -f factor -e epoch')
     parser.add_argument('-k','--model_type', help='type of model', required=False)
+    parser.add_argument('-i','--init_type', help='type of init', required=False)
     parser.add_argument('-e','--epoch', help='num of training epochs', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
