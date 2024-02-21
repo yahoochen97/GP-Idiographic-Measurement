@@ -67,7 +67,6 @@ elif [ $1 = "ESM" ]
 then
     declare -a FACTORS=(1)
     declare -a MODELS=("both")
-    declare -a MODELS=("Gaussian")
     for MODEL in ${MODELS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
             bsub -G SEAS-Lab-Garnett -o "log/ESM_${MODEL}_${FACTOR}.log" -J "ESM_${MODEL}_${FACTOR}" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
@@ -87,8 +86,9 @@ elif [ $1 = "ESM_baseline" ]
 then
     declare -a FACTORS=(5 1 1 1 1)
     declare -a TYPES=("sem" "graded_multi" "gpcm_multi" "sequential_multi" "TVAR")
-    
-    for j in $(seq 0 1 4); do
+    declare -a FACTORS=(5)
+    declare -a TYPES=("sem")
+    for j in $(seq 0 0); do
         TYPE=${TYPES[$j]}
         FACTOR=${FACTORS[$j]}
         bsub -G SEAS-Lab-Garnett -o "log/ESM_${TYPE}_${FACTOR}.log" -J "ESM_${TYPE}_${FACTOR}" "Rscript --vanilla utilities/ESM_MIRT.R $FACTOR $TYPE"

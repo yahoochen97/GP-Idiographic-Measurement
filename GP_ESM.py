@@ -114,7 +114,6 @@ def main(args):
         for i in range(n):
             model.unit_task_covar_module[i].covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
 
-
     # select hyperparameters to learn
     for i in range(n):
         model.t_covar_module[i].lengthscale = data.day.max() // 3 
@@ -132,7 +131,7 @@ def main(args):
                 num_params += num_param
     print("num of model parameters: {}".format(num_params))
 
-    optimizer = torch.optim.Adam(final_params, lr=0.05)
+    optimizer = torch.optim.Adam(final_params, lr=0.1)
 
     # Our loss object. We're using the VariationalELBO
     mll = VariationalELBO(likelihood, model, num_data=train_y.size(0))

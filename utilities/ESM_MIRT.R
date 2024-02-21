@@ -45,9 +45,9 @@ if(TYPE=="sem"){
   loadings = matrix(loadings, nrow = m)
   correlation_matrix = loadings %*% t(loadings)
   
-  thetas = predict(fit, newdata = data)
-  pred_y = matrix(0, nrow = nrow(data), ncol=m)
-  for (i in 1:nrow(data)){
+  thetas = predict(fit, newdata = train_data)
+  pred_y = matrix(0, nrow = nrow(train_data), ncol=m)
+  for (i in 1:nrow(train_data)){
     pred_y[i,] = rep( thetas[i,], each = m/5) * loadings
   }
   
@@ -57,8 +57,6 @@ if(TYPE=="sem"){
   train_acc = mean(pred_y[train_mask==1]==train_data[train_mask==1])
   train_ll = log_lik / n / m / horizon
   
-  
-  write.csv(loadings, file=paste("./results/loopr/", TYPE,"_", RANK, ".csv" , sep=""))
 }else if(TYPE=="TVAR"){
   library(mgm)
   train_data = data[,1:m]
@@ -73,7 +71,6 @@ if(TYPE=="sem"){
                       lags = 1,
                       scale = TRUE,
                       pbar = TRUE)
-  
   
   pred_obj <- predict(object = tvvar_obj, 
                       data = train_data, 
