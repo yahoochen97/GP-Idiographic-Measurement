@@ -43,19 +43,19 @@ if(TYPE=="sem"){
   
   loadings = parameterEstimates(fit)[1:(m*RANK),"est"]
   loadings = matrix(loadings, nrow = m)
-  correlation_matrix = loadings %*% t(loadings)
+  loadings[is.na(loadings)] = 0
   
   thetas = predict(fit, newdata = train_data)
   pred_y = matrix(0, nrow = nrow(train_data), ncol=m)
   for (i in 1:nrow(train_data)){
-    pred_y[i,] = rep( thetas[i,], each = m/5) * loadings
+    pred_y[i,] = rowSums(rep( thetas[i,], each = m/5) * loadings)
   }
   
   pred_y = (pred_y-min(pred_y)+1)/(max(pred_y)-min(pred_y))*(C-1)
   pred_y = round(pred_y, digits = 0)
   
-  train_acc = mean(pred_y[train_mask==1]==train_data[train_mask==1])
-  train_ll = log_lik / n / m / horizon
+  train_acc = mean(pred_y[!is.na(train_data)]==train_data[!is.na(train_data)])
+  train_ll = log_lik / sum(!is.na(train_data))
   
 }else if(TYPE=="TVAR"){
   library(mgm)

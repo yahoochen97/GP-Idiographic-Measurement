@@ -12,3 +12,4 @@ results/both
 data/synthetic/
 *GIMME*
 *.Rhistory
+*.RData
