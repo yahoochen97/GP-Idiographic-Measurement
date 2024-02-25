@@ -25,7 +25,7 @@ from utilities.util import plot_agg_task_kernel, evaluate_gpr
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 10
+    num_epochs = 0
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -156,7 +156,7 @@ def main(args):
     likelihood.eval()
     print("start predicting...")
 
-    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader)
+    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader, mll)
 
     results = {}
     print("in-sample evaluatiion...")
