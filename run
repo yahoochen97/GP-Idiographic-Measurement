@@ -48,6 +48,14 @@ then
     #         python loopr.py -k $TYPE -f $FACTOR -e $EPOCH
     #     done
     # done
+    declare -a FACTORS=(1 2 3 4 5)
+    declare -a EPOCHS=(10)
+    TYPE="Gaussian"
+    for EPOCH in ${EPOCHS[@]}; do
+        for FACTOR in ${FACTORS[@]}; do
+            bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "python loopr.py -k $TYPE -i PCA -f $FACTOR -e $EPOCH"
+        done
+    done
     # declare -a FACTORS=(1 2 3 4 5)
     # declare -a TYPES=("graded_multi" "gpcm_multi" "sequential_multi")
     # for TYPE in ${TYPES[@]}; do
@@ -55,14 +63,14 @@ then
     #         bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "Rscript --vanilla utilities/loopr_MIRT.R $FACTOR $TYPE"
     #     done
     # done
-    declare -a FACTORS=(1 2 3 4 5)
-    declare -a TYPES=("sem" "grm" "srm" "gpcm")
-    declare -a TYPES=("sem")
-    for TYPE in ${TYPES[@]}; do
-        for FACTOR in ${FACTORS[@]}; do
-            python loopr.py -k pop -i $TYPE -f $FACTOR -e 0
-        done
-    done
+    # declare -a FACTORS=(1 2 3 4 5)
+    # declare -a TYPES=("sem" "grm" "srm" "gpcm")
+    # declare -a TYPES=("sem")
+    # for TYPE in ${TYPES[@]}; do
+    #     for FACTOR in ${FACTORS[@]}; do
+    #         python loopr.py -k pop -i $TYPE -f $FACTOR -e 0
+    #     done
+    # done
 elif [ $1 = "ESM" ]
 then
     declare -a FACTORS=(1)

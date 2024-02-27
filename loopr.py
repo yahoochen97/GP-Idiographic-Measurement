@@ -17,6 +17,7 @@ warnings.filterwarnings("ignore")
 from gpytorch.mlls import VariationalELBO
 from torch.utils.data import TensorDataset, DataLoader
 from utilities.util import OrdinalLMC, OrdinalLikelihood
+from gpytorch.likelihoods import GaussianLikelihood
 from utilities.util import correlation_matrix_distance, plot_task_kernel, evaluate_gpr
 
 def main(args):
@@ -56,7 +57,11 @@ def main(args):
     
     inducing_points = train_x[:num_inducing,:]
     # inducing_points = train_x[np.random.choice(train_x.size(0),num_inducing,replace=False),:]
-    likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
+    if model_type=="Gaussian":
+        likelihood = GaussianLikelihood()
+        model_type = "pop"
+    else:
+        likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
     pop_rank = FACTOR
     model = OrdinalLMC(inducing_points,n=1,m=m,C=C,horizon=horizon,pop_rank=pop_rank, model_type=model_type)
 
@@ -114,9 +119,12 @@ def main(args):
     print("in-sample evaluatiion...")
     model.eval()
     likelihood.eval()
-    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader)
+    train_acc, train_ll = evaluate_gpr(model, likelihood, train_loader, mll)
     print("train acc: {}".format(train_acc))
     print("train ll: {}".format(train_ll))
+
+    if isinstance(likelihood, GaussianLikelihood):
+        model_type = "Gaussian"
 
     directory = "./results/loopr/"
     if not os.path.exists(directory):
@@ -133,7 +141,7 @@ def main(args):
     cov_file = "loopr_pop_{}_f{}_e{}.npz".format(init_type, FACTOR, num_epochs)
     np.savez(directory+cov_file, **results)
 
-    if init_type!="PCA":
+    if init_type!="PCA" or model_type=="Gaussian":
         return
 
     file_name = directory + "/loopr_pop_f{}_e{}.pdf".format(FACTOR, num_epochs)
