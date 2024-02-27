@@ -53,7 +53,7 @@ then
     TYPE="Gaussian"
     for EPOCH in ${EPOCHS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
-            bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "python loopr.py -k $TYPE -i PCA -f $FACTOR -e $EPOCH"
+            bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "module add seas-lab-vorobeychik; python loopr.py -k $TYPE -i PCA -f $FACTOR -e $EPOCH"
         done
     done
     # declare -a FACTORS=(1 2 3 4 5)
