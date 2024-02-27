@@ -95,7 +95,7 @@ then
     declare -a FACTORS=(5 1 1 1 1)
     declare -a TYPES=("sem" "graded_multi" "gpcm_multi" "sequential_multi" "TVAR")
     declare -a FACTORS=(5)
-    declare -a TYPES=("sem")
+    declare -a TYPES=("TVAR")
     for j in $(seq 0 0); do
         TYPE=${TYPES[$j]}
         FACTOR=${FACTORS[$j]}

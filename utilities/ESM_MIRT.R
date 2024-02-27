@@ -6,7 +6,7 @@ TYPEs = c("graded_mult", "gpcm_multi","sequential_multi", "sem")
 
 if (length(args)==0) {
   RANK = 5
-  TYPE = "sem"
+  TYPE = "TVAR"
 }
 if (length(args)==2){
   RANK = as.integer(args[1])
@@ -60,13 +60,15 @@ if(TYPE=="sem"){
 }else if(TYPE=="TVAR"){
   library(mgm)
   train_data = data[,1:m]
+  missing_mask = is.na(train_data)
+  train_data[missing_mask] = 3
   horizon = max(data$day)
   tvvar_obj <- tvmvar(data = train_data,
                       type = rep("g", m),
                       level = rep(1, m), 
                       lambdaSel = "CV",
                       estpoints =  seq(0, 1, length = horizon),
-                      timepoints = rep(1:horizon, each=n)/horizon,
+                      timepoints = data$day/horizon,
                       bandwidth = 0.25,
                       lags = 1,
                       scale = TRUE,
@@ -81,8 +83,8 @@ if(TYPE=="sem"){
   pred_y = (pred_y-min(pred_y)+1)/(max(pred_y)-min(pred_y))*(C-1)
   pred_y = round(pred_y, digits = 0)
   
-  train_acc = mean(pred_y==train_data[2:nrow(data),])
-  train_ll = mean(log(dnorm(pred_y-train_data[2:nrow(data),])))
+  train_acc = mean(pred_y[missing_mask]==train_data[missing_mask][2:nrow(data),])
+  train_ll = mean(log(dnorm(pred_y[missing_mask]-train_data[missing_mask][2:nrow(data),])))
 }else{
   train_data = data
   test_data = data
