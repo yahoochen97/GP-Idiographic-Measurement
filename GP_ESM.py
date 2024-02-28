@@ -187,6 +187,7 @@ def main(args):
             task_kernel += model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy()
         unit_covariance[i] = task_kernel
         results["unit_{}_covariance".format(i)] = task_kernel
+        results["unit_{}_factor".format(i)] = model.unit_task_covar_module[i].covar_factor.detach().numpy()
 
     PATH = "./results/GP_ESM/"
     if isinstance(likelihood, GaussianLikelihood):
