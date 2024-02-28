@@ -55,7 +55,9 @@ def main(args):
     data["day"] = time_diff.days
     data["day"] += time_diff.seconds/60/60/25
 
-    n = data.PID.unique().shape[0]
+    PIDs = data.PID.unique()
+    n = PIDs.shape[0]
+    PID_mapping = dict(zip(PIDs, range(n)))
     m = len(ESM_items)
     horizon = data.day.max()
 
@@ -66,7 +68,7 @@ def main(args):
     ITER = 0
     for iter in range(data.shape[0]):
         for j in range(m):
-            train_x[ITER, 0] = data.PID[iter]
+            train_x[ITER, 0] = PID_mapping[data.PID[iter]]
             train_x[ITER, 1] = j
             train_x[ITER, 2] = data.day[iter]
             train_y[ITER] = data[item_mapping[ESM_items[j]]][iter]

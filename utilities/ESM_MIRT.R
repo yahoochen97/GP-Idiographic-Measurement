@@ -59,6 +59,7 @@ if(TYPE=="sem"){
   
 }else if(TYPE=="TVAR"){
   library(mgm)
+  C = 5
   train_data = data[,1:m]
   missing_mask = is.na(train_data)
   train_data[missing_mask] = 3
@@ -82,9 +83,11 @@ if(TYPE=="sem"){
   pred_y = pred_obj$predicted
   pred_y = (pred_y-min(pred_y)+1)/(max(pred_y)-min(pred_y))*(C-1)
   pred_y = round(pred_y, digits = 0)
+  pred_y = matrix(pred_y, ncol=m)
   
-  train_acc = mean(pred_y[missing_mask]==train_data[missing_mask][2:nrow(data),])
-  train_ll = mean(log(dnorm(pred_y[missing_mask]-train_data[missing_mask][2:nrow(data),])))
+  mask = is.na(train_data[2:nrow(data),][!missing_mask])
+  train_acc = mean(pred_y[!missing_mask][!mask]==train_data[2:nrow(data),][!missing_mask][!mask])
+  train_ll = mean(log(dnorm(pred_y[!missing_mask][!mask]-train_data[2:nrow(data),][!missing_mask][!mask])))
 }else{
   train_data = data
   test_data = data

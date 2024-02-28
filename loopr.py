@@ -125,6 +125,7 @@ def main(args):
 
     if isinstance(likelihood, GaussianLikelihood):
         model_type = "Gaussian"
+        init_type = "Gaussian"
 
     directory = "./results/loopr/"
     if not os.path.exists(directory):

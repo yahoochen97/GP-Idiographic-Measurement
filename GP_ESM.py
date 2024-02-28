@@ -25,7 +25,7 @@ from utilities.util import plot_agg_task_kernel, evaluate_gpr
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 0
+    num_epochs = 10
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -57,7 +57,9 @@ def main(args):
     # data = data[cols]
     # data.to_csv("./data/GP_ESM.csv", index=False)
 
-    n = data.PID.unique().shape[0]
+    PIDs = data.PID.unique()
+    n = PIDs.shape[0]
+    PID_mapping = dict(zip(PIDs, range(n)))
     m = len(ESM_items)
     horizon = data.day.max()
 
@@ -68,7 +70,7 @@ def main(args):
     ITER = 0
     for iter in range(data.shape[0]):
         for j in range(m):
-            train_x[ITER, 0] = data.PID[iter]
+            train_x[ITER, 0] = PID_mapping[data.PID[iter]]
             train_x[ITER, 1] = j
             train_x[ITER, 2] = data.day[iter]
             train_y[ITER] = data[item_mapping[ESM_items[j]]][iter]
@@ -113,7 +115,10 @@ def main(args):
     if model_type=="ind":
         for i in range(n):
             model.unit_task_covar_module[i].covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
-
+    # if model_type=="both":
+    #     for i in range(n):
+    #         model.unit_task_covar_module[i].covar_factor.data *= 0 
+    
     # select hyperparameters to learn
     for i in range(n):
         model.t_covar_module[i].lengthscale = data.day.max() // 3 
