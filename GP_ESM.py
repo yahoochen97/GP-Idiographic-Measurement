@@ -25,7 +25,7 @@ from utilities.util import plot_agg_task_kernel, evaluate_gpr
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 10
+    num_epochs = 2
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -96,7 +96,7 @@ def main(args):
         likelihood = GaussianLikelihood()
         model_type = "both"
     else:
-        likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.,-1.,1.,2.,20.]))
+        likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-0.8,-0.25,0.25,0.8,20.]))
     pop_rank = 5
     unit_rank = FACTOR
     if model_type=="pop":
@@ -121,7 +121,7 @@ def main(args):
     
     # select hyperparameters to learn
     for i in range(n):
-        model.t_covar_module[i].lengthscale = data.day.max() // 3 
+        model.t_covar_module[i].lengthscale = data.day.max() // 1
     model.fixed_module.raw_lengthscale.requires_grad = False
 
     final_params = list(set(model.parameters()) - \
@@ -200,7 +200,7 @@ def main(args):
 
 def plot_unit_cor_matrix():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_f1_Feb.npz")
+    results = np.load(PATH+"both_f1_Mar9.npz")
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -230,9 +230,9 @@ def plot_unit_cor_matrix():
                          np.array(ESM_items), \
                         "./results/GP_ESM/both_unit_cov/both_unit_{}_5.pdf".format(i), SORT=False)
         
-        plot_agg_task_kernel(ind_task_kernel, pop_task_kernel, \
-                         np.array(ESM_items), \
-                        "./results/GP_ESM/both_ind_cov/both_ind_{}_5.pdf".format(i), SORT=False)
+    #     plot_agg_task_kernel(ind_task_kernel, pop_task_kernel, \
+    #                      np.array(ESM_items), \
+    #                     "./results/GP_ESM/both_ind_cov/both_ind_{}_5.pdf".format(i), SORT=False)
 
     return
     # iterate over all pairs of items
@@ -263,7 +263,7 @@ def plot_unit_cor_matrix():
 
 def cluster_analysis():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_f1_Feb.npz")
+    results = np.load(PATH+"both_f1_Mar9.npz") # Feb
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()

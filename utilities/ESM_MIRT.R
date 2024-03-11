@@ -6,7 +6,7 @@ TYPEs = c("graded_mult", "gpcm_multi","sequential_multi", "sem")
 
 if (length(args)==0) {
   RANK = 5
-  TYPE = "TVAR"
+  TYPE = "gpcm_multi"
 }
 if (length(args)==2){
   RANK = as.integer(args[1])
@@ -217,5 +217,5 @@ print(train_acc)
 print("train ll")
 print(train_ll)
 
-save(train_acc, train_ll,
-     file=paste("./results/GP_ESM/baselines/", TYPE,"_", RANK, ".RData" , sep=""))
+# save(train_acc, train_ll,
+#      file=paste("./results/GP_ESM/baselines/", TYPE,"_", RANK, ".RData" , sep=""))
