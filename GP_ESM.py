@@ -44,6 +44,7 @@ def main(args):
 
     # read data
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+    # data = data[data.PID<10]
 
     data.columns = [x.replace(" ", "") for x in data.columns]
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
@@ -121,7 +122,7 @@ def main(args):
     
     # select hyperparameters to learn
     for i in range(n):
-        model.t_covar_module[i].lengthscale = data.day.max() // 1
+        model.t_covar_module[i].lengthscale = 7 # data.day.max() // 3
     model.fixed_module.raw_lengthscale.requires_grad = False
 
     final_params = list(set(model.parameters()) - \
