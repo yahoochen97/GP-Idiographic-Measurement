@@ -685,7 +685,6 @@ def evaluate_gpr(model, likelihood, data_loader, mll=None):
     with gpytorch.settings.fast_pred_var(), torch.no_grad():
         for x_batch, y_batch in data_loader:
             test_dist = likelihood(model(x_batch))
-            test_dist.sample()
             if isinstance(likelihood, gpytorch.likelihoods.GaussianLikelihood):
                 probabilities = test_dist.loc
                 probabilities = torch.round(np.clip(probabilities, 1, 5))

@@ -25,7 +25,7 @@ from utilities.util import plot_agg_task_kernel, evaluate_gpr
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 2
+    num_epochs = 5
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -97,7 +97,7 @@ def main(args):
         likelihood = GaussianLikelihood()
         model_type = "both"
     else:
-        likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-0.8,-0.25,0.25,0.8,20.]))
+        likelihood = OrdinalLikelihood(thresholds=torch.tensor([-20.,-2.5,-1.,1.,2.5,20.]))
     pop_rank = 5
     unit_rank = FACTOR
     if model_type=="pop":
@@ -201,7 +201,7 @@ def main(args):
 
 def plot_unit_cor_matrix():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_f1_Mar9.npz")
+    results = np.load(PATH+"both_f1_Feb.npz") # Feb
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -264,7 +264,7 @@ def plot_unit_cor_matrix():
 
 def cluster_analysis():
     PATH = "./results/GP_ESM/"
-    results = np.load(PATH+"both_f1_Mar9.npz") # Feb
+    results = np.load(PATH+"both_f1_Feb.npz") # Feb
 
     data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
     Items_loopr = data.columns.to_list()
@@ -288,6 +288,18 @@ def cluster_analysis():
     # plot populational kernel
     pop_task_kernel = results["pop_covariance"]
     pop_task_kernel = pop_task_kernel # * reverse_mask
+    directory = "./results/GP_ESM/centroids/"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    plot_task_kernel(pop_task_kernel, \
+            np.array(ESM_items), \
+            directory + "both_pop_5.pdf", SORT=False)
+    
+    # print performance evaluation
+    print(results["train_acc"])
+    print(results["train_ll"])
+    print(results["log_lik"])
+
     # plot individual kernel
     unit_cov_evs = np.zeros((n,5))
     discrepancy_pop = np.zeros((n,))
@@ -307,9 +319,6 @@ def cluster_analysis():
     K = 5
     centroids, assignments, dists = matrix_kmeans(all_cov, K=K)
     # plot centroids
-    directory = "./results/GP_ESM/centroids/"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
     for k in range(K):
         # plot_task_kernel(centroids[k], \
         #     np.array(ESM_items), \
@@ -344,13 +353,13 @@ def cluster_analysis():
             '#74add1',
             '#4575b4']
     
-    import mantel
-    for k in range(K):
-        mant = mantel.test(centroids[0], centroids[k], perms=10000, method='pearson', tail='upper')
-        print(mant.summary())
-        print("cluster {}: ".format(k+1))
-        print(np.arange(1,n+1)[assignments==k])
-        print(len(np.arange(1,n+1)[assignments==k]))
+    # import mantel
+    # for k in range(K):
+    #     mant = mantel.test(centroids[0], centroids[k], perms=10000, method='pearson', tail='upper')
+    #     print(mant.summary())
+    #     print("cluster {}: ".format(k+1))
+    #     print(np.arange(1,n+1)[assignments==k])
+    #     print(len(np.arange(1,n+1)[assignments==k]))
  
     # Add empty bars to the end of each group
     PAD = 1
