@@ -113,16 +113,12 @@ if(TYPE=="sem"){
   }
   
   # fit mirt model
-  TECH = list()
-  TECH[["NCYCLES"]] = 5
-  TECH[["MAXQUAD"]] = 100
   mirt_fit <- mirt(data = data.frame(train_data[,1:m]), 
                      model = factor_model,
                      itemtype = MODEL_NAME,
                      method = EM_method,
                      optimizer = "nlminb",
-                     verbose = FALSE,
-                     technical = TECH)
+                     verbose = FALSE)
   
   if(MODEL_NAME=="sequential"){
     coefs = coef(mirt_fit, simplify = TRUE)$items
