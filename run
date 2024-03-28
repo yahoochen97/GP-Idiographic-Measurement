@@ -73,7 +73,7 @@ then
     # done
 elif [ $1 = "ESM" ]
 then
-    declare -a FACTORS=(1 2)
+    declare -a FACTORS=(1)
     declare -a MODELS=("both")
     for MODEL in ${MODELS[@]}; do
         for FACTOR in ${FACTORS[@]}; do

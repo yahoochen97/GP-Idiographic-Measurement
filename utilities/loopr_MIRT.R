@@ -5,7 +5,7 @@ TYPEs = c("graded_multi",  "gpcm_multi", "sequential_multi")
 
 if (length(args)==0) {
   RANK = 1
-  TYPE = "graded_multi"
+  TYPE = "gpcm_multi"
 }
 if (length(args)==2){
   RANK = as.integer(args[1])

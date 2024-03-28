@@ -2,10 +2,10 @@ args = commandArgs(trailingOnly=TRUE)
 options(show.error.locations = TRUE)
 # ESM MIRT AND SEM for in-sample comparison
 
-TYPEs = c("graded_mult", "gpcm_multi","sequential_multi", "sem")
+TYPEs = c("graded_multi", "gpcm_multi","sequential_multi", "sem")
 
 if (length(args)==0) {
-  RANK = 5
+  RANK = 1
   TYPE = "gpcm_multi"
 }
 if (length(args)==2){
@@ -89,6 +89,7 @@ if(TYPE=="sem"){
   train_acc = mean(pred_y[!missing_mask][!mask]==train_data[2:nrow(data),][!missing_mask][!mask])
   train_ll = mean(log(dnorm(pred_y[!missing_mask][!mask]-train_data[2:nrow(data),][!missing_mask][!mask])))
 }else{
+  print("MIRT")
   train_data = data
   test_data = data
   test_data[!is.na(test_data)] = NA
@@ -106,18 +107,22 @@ if(TYPE=="sem"){
   MODEL_NAME = unlist(strsplit(TYPE, "_"))[1]
   UNI = unlist(strsplit(TYPE, "_"))[2]
   EM_method = "QMCEM"
-  if(UNI=="uni"){
+  if(UNI=="uni" | RANK==1){
     factor_model = 1
     EM_method="EM"
   }
   
   # fit mirt model
+  TECH = list()
+  TECH[["NCYCLES"]] = 5
+  TECH[["MAXQUAD"]] = 100
   mirt_fit <- mirt(data = data.frame(train_data[,1:m]), 
                      model = factor_model,
                      itemtype = MODEL_NAME,
                      method = EM_method,
                      optimizer = "nlminb",
-                     verbose = FALSE)
+                     verbose = FALSE,
+                     technical = TECH)
   
   if(MODEL_NAME=="sequential"){
     coefs = coef(mirt_fit, simplify = TRUE)$items

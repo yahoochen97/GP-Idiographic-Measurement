@@ -24,8 +24,8 @@ from utilities.util import plot_agg_task_kernel, evaluate_gpr
 
 def main(args):
     load_batch_size = 512
-    num_inducing = 5000
-    num_epochs = 5
+    num_inducing = 10000
+    num_epochs = 10
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
