@@ -6,7 +6,7 @@ TYPEs = c("graded_multi", "gpcm_multi","sequential_multi", "sem")
 
 if (length(args)==0) {
   RANK = 1
-  TYPE = "gpcm_multi"
+  TYPE = "graded_multi"
 }
 if (length(args)==2){
   RANK = as.integer(args[1])
@@ -113,12 +113,23 @@ if(TYPE=="sem"){
   }
   
   # fit mirt model
-  mirt_fit <- mirt(data = data.frame(train_data[,1:m]), 
+  if (MODEL_NAME=="gpcm"){
+    mirt_fit <- mirt(data = data.frame(train_data[,1:m]), 
+                     model = factor_model,
+                     itemtype = MODEL_NAME,
+                     method = EM_method,
+                     optimizer = "BFGS",
+                     dentype = "empiricalhist_Woods",
+                     verbose = FALSE)
+  }else{
+    mirt_fit <- mirt(data = data.frame(train_data[,1:m]), 
                      model = factor_model,
                      itemtype = MODEL_NAME,
                      method = EM_method,
                      optimizer = "nlminb",
                      verbose = FALSE)
+  }
+  
   
   if(MODEL_NAME=="sequential"){
     coefs = coef(mirt_fit, simplify = TRUE)$items

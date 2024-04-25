@@ -24,8 +24,8 @@ from utilities.util import plot_agg_task_kernel, evaluate_gpr
 
 def main(args):
     load_batch_size = 512
-    num_inducing = 10000
-    num_epochs = 10
+    num_inducing = 5000
+    num_epochs = 5
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -44,13 +44,16 @@ def main(args):
 
     # read data
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+
+    # read new data
+    data = pd.read_csv("./data/GP_Data.csv", index_col=[0])
     # data = data[data.PID<10]
 
     data.columns = [x.replace(" ", "") for x in data.columns]
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
     reverse_code = np.array(reverse_code).reshape(-1,1)
-    time_diff = (pd.to_datetime(data.RecordedDate, format='%Y-%m-%d %H:%M:%S')-pd.to_datetime(data.RecordedDate[0])).dt
+    time_diff = (pd.to_datetime(data.RecordedDate, format='%Y-%m-%d %H:%M:%S')-pd.to_datetime(data.RecordedDate.iloc[0])).dt
     data["day"] = time_diff.days
     data["day"] += time_diff.seconds/60/60/25
 
@@ -190,10 +193,10 @@ def main(args):
         results["unit_{}_covariance".format(i)] = task_kernel
         results["unit_{}_factor".format(i)] = model.unit_task_covar_module[i].covar_factor.detach().numpy()
 
-    PATH = "./results/GP_ESM/"
+    PATH = "./results/GP_ESM_2/"
     if isinstance(likelihood, GaussianLikelihood):
         model_type = "Gaussian"
-        PATH = "./results/GP_ESM/baselines/"
+        PATH = "./results/GP_ESM_2/baselines/"
 
     if not os.path.exists(PATH):
         os.makedirs(PATH)

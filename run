@@ -9,8 +9,7 @@ n=10
 m=20
 t=30
 MAXSEED=25
-declare -a TYPES=("pop" "ind" "both" "graded_multi" "gpcm_multi" "sequential_multi")
-declare -a FACTORS=(5)
+ip230-iudeclare -a FACTORS=(5)
 
 declare -a TYPES=("pop" "ind" "both" "Gaussian")
 declare -a TYPES=("both_prior")

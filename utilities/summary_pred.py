@@ -46,7 +46,7 @@ def main(args):
                 ax.set_xticks(XTICKS, ["A", "O", "E", "C", "N"])
             else:
                 ax.set_xticks(XTICKS, XTICKS)
-                ax.set_xlabel("forcast day(s)", fontsize=16)
+                ax.set_xlabel("forecast day(s)", fontsize=16)
             YTICKS = [0.2, 0.3, 0.4, 0.5]
             if MEASURE=="log lik":
                 YTICKS = [-1.8, -1.6,-1.4,-1.2]
