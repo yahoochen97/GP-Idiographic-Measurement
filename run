@@ -9,7 +9,7 @@ n=10
 m=20
 t=30
 MAXSEED=25
-ip230-iudeclare -a FACTORS=(5)
+declare -a FACTORS=(5)
 
 declare -a TYPES=("pop" "ind" "both" "Gaussian")
 declare -a TYPES=("both_prior")
