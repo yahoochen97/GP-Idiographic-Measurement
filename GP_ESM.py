@@ -53,7 +53,8 @@ def main(args):
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
     reverse_code = np.array(reverse_code).reshape(-1,1)
-    time_diff = (pd.to_datetime(data.RecordedDate, format='%Y-%m-%d %H:%M:%S')-pd.to_datetime(data.RecordedDate.iloc[0])).dt
+    time_diff = (pd.to_datetime(data.RecordedDate, format='%Y-%m-%d %H:%M:%S')-\
+                 pd.to_datetime(data.RecordedDate.iloc[0])).dt
     data["day"] = time_diff.days
     data["day"] += time_diff.seconds/60/60/25
 
@@ -74,10 +75,10 @@ def main(args):
     ITER = 0
     for iter in range(data.shape[0]):
         for j in range(m):
-            train_x[ITER, 0] = PID_mapping[data.PID[iter]]
+            train_x[ITER, 0] = PID_mapping[data.PID.iloc[iter]]
             train_x[ITER, 1] = j
-            train_x[ITER, 2] = data.day[iter]
-            train_y[ITER] = data[item_mapping[ESM_items[j]]][iter]
+            train_x[ITER, 2] = data.day.iloc[iter]
+            train_y[ITER] = data[item_mapping[ESM_items[j]]].iloc[iter]
             if reverse_code[j,0]==1:
                 train_y[ITER] = 6 - train_y[ITER]
             ITER += 1
