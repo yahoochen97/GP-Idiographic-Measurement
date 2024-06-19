@@ -445,10 +445,11 @@ class UnitMaskKernel(Kernel):
         return res
     
 class OrdinalLMC(ApproximateGP):
-    def __init__(self, inducing_points, n, m, C, horizon, pop_rank=5, unit_rank=1, model_type="pop"):
+    def __init__(self, inducing_points, n, m, C, horizon, d=0, pop_rank=5, unit_rank=1, model_type="pop"):
         self.C = C # cardinality of responses
         self.n = n # number of respondents
         self.m = m # number of items
+        self.d = d # number of covariates (situation features)
         self.horizon = horizon # number of time periods
         self.model_type = model_type
         self.batch_shape = torch.Size([])
@@ -466,18 +467,21 @@ class OrdinalLMC(ApproximateGP):
         # populational item covariance
         self.pop_task_covar_module = IndexKernel(num_tasks=m, rank=pop_rank,\
                                 prior=NormalPrior(0.,4.))
-        # for r in range(rank):
-        #     self.pop_task_covar_module.register_constraint(\
-        #         self.pop_task_covar_module.covar_factor[(r*m//rank):(r*m//rank+m//rank),r], Positive())
         # individual item covaraince
-        self.unit_mask_covar_module = ModuleList([UnitMaskKernel(n=i) \
+        
+        if model_type!="pop" or self.horizon > 1:
+            self.unit_mask_covar_module = ModuleList([UnitMaskKernel(n=i) \
                     for i in range(n)])
+
         if model_type=="both":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
                     rank=unit_rank, prior=NormalPrior(0.,1)) for i in range(n)])
         elif model_type=="ind":
             self.unit_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
                     rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])
+        if self.d>0:
+            self.situation_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
+                    rank=unit_rank, prior=NormalPrior(0.,1)) for i in range(d)])
            
         # fixed matrix for indicating unit in the item task kernel
         # equals 1 if and only if unit indices are the same
@@ -492,14 +496,18 @@ class OrdinalLMC(ApproximateGP):
         unit_indicator_x = self.fixed_module(x[:,0])
 
         # task kernel
-        task_covar_x = self.pop_task_covar_module(x[:,1])#.evaluate_kernel().evaluate()
+        task_covar_x = self.pop_task_covar_module(x[:,1])
+
         if self.model_type=="ind":
             task_covar_x *= 0
-        # pop_weights = self.task_weights_module(x[:,0])
         if self.model_type!="pop":
             for i in range(self.n):
                 task_covar_x += self.unit_mask_covar_module[i](x[:,0]) * \
                     (unit_indicator_x) * self.unit_task_covar_module[i](x[:,1])
+        if self.d>0:
+            for i in range(self.d):
+                task_covar_x += self.situation_task_covar_module[i](x[:,1]) * \
+                    (x[:,(3+i)].reshape(-1,1) @ x[:,(3+i)].reshape(1,-1))
            
         # product of unit indicator, task and time kernels
         covar_x = unit_indicator_x * task_covar_x
