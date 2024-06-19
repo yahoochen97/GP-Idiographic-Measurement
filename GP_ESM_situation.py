@@ -170,10 +170,14 @@ def main(args):
     unit_covariance = np.zeros((n,m,m))
     for i in range(n):
         task_kernel = model.pop_task_covar_module.covar_matrix.evaluate().detach().numpy()
-        task_kernel += model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy()
+        for k in range(len(situations)):
+            task_kernel += model.situation_task_covar_module[k].covar_matrix.evaluate().detach().numpy() \
+                        * train_x[i,(3+k)].numpy()
         unit_covariance[i] = task_kernel
         results["unit_{}_covariance".format(i)] = task_kernel
-        results["unit_{}_factor".format(i)] = model.unit_task_covar_module[i].covar_factor.detach().numpy()
+    
+    for k in range(len(situations)):
+        results["situation_{}_factor".format(k)] = model.situation_task_covar_module[k].covar_factor.detach().numpy()
 
     PATH = "./results/GP_ESM_2/"
     if not os.path.exists(PATH):
