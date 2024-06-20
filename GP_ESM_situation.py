@@ -65,7 +65,7 @@ def main(args):
     horizon = data.day.max()
 
     # add situation data
-    situations = ['Di_Sit_' + str(i) for i in range(1,11)]
+    situations = ['Di_Sit_' + str(i) for i in range(1,2)]
 
     # transform to row data frame
     train_x = torch.zeros((n*m*data.n.max(),3 + len(situations)))
