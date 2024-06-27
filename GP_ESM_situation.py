@@ -22,6 +22,10 @@ from utilities.util import OrdinalLMC, OrdinalLikelihood
 from utilities.util import correlation_matrix_distance, plot_task_kernel
 from utilities.util import plot_agg_task_kernel, evaluate_gpr
 
+# add situation data
+num_situation = 1
+situations = ['Di_Sit_' + str(i) for i in range(1,num_situation+1)]
+
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
@@ -45,10 +49,6 @@ def main(args):
     # read data
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
 
-    # read new data
-    # data = pd.read_csv("./data/GP_Data.csv", index_col=[0])
-    # data = data[data.PID<10]
-
     data.columns = [x.replace(" ", "") for x in data.columns]
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
     reverse_code = [reverse_code[i] for i in range(codebook.shape[0]) if codebook.iloc[i,0].replace(" ", "") in Items_loopr]
@@ -63,9 +63,6 @@ def main(args):
     PID_mapping = dict(zip(PIDs, range(n)))
     m = len(ESM_items)
     horizon = data.day.max()
-
-    # add situation data
-    situations = ['Di_Sit_' + str(i) for i in range(1,2)]
 
     # transform to row data frame
     train_x = torch.zeros((n*m*data.n.max(),3 + len(situations)))
@@ -173,11 +170,15 @@ def main(args):
         for k in range(len(situations)):
             task_kernel += model.situation_task_covar_module[k].covar_matrix.evaluate().detach().numpy() \
                         * train_x[i,(3+k)].numpy()
+        if model_type!="pop":
+            task_kernel += model.unit_task_covar_module[i].covar_matrix.evaluate().detach().numpy()
         unit_covariance[i] = task_kernel
         results["unit_{}_covariance".format(i)] = task_kernel
-    
+        results["unit_{}_factor".format(i)] = model.unit_task_covar_module[i].covar_factor.detach().numpy()
+
     for k in range(len(situations)):
         results["situation_{}_factor".format(k)] = model.situation_task_covar_module[k].covar_factor.detach().numpy()
+        results["situation_{}_covar".format(k)] = model.situation_task_covar_module[k].covar_matrix.evaluate().detach().numpy()
 
     PATH = "./results/GP_ESM_2/"
     if not os.path.exists(PATH):
@@ -185,9 +186,46 @@ def main(args):
     np.savez(PATH+"situation_{}_f{}.npz".format(model_type, FACTOR), **results)
 
 
+def plot_situation():
+    PATH = "./results/GP_ESM_2/"
+    results = np.load(PATH+"situation_pop_f5.npz") 
+
+    print(results["train_acc"])
+    print(results["train_ll"])
+
+    data = pd.read_csv("./data/loopr_data.csv", index_col=[0])
+    Items_loopr = data.columns.to_list()
+
+    # rename volat to violat
+    for i in range(1,5):
+        Items_loopr[Items_loopr.index("Volat.{}".format(i))] = "Violat.{}".format(i)
+
+    # generate item map from original to current using ESM codebook
+    codebook = pd.read_excel("./data/ESM_Codebook.xlsx")
+    ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
+    data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+    n = data.PID.unique().shape[0]
+    pop_task_kernel = results["pop_covariance"]
+
+    # plot individual kernel
+    all_cov = np.zeros((len(situations),len(ESM_items),len(ESM_items)))
+    for k in range(len(situations)):
+        ind_task_kernel = results["situation_{}_factor".format(k)]
+        all_cov[k] = ind_task_kernel @ ind_task_kernel.transpose() + pop_task_kernel
+
+    # plot_agg_task_kernel(pop_task_kernel + pop_task_kernel, pop_task_kernel, PATH + "pop_{}.pdf".format(k))
+    # plot centroids
+    for k in range(len(situations)):
+        plot_agg_task_kernel(all_cov[k], pop_task_kernel, PATH + "residual_{}.pdf".format(k))
+        plot_task_kernel(all_cov[k], \
+             np.array(ESM_items), \
+             PATH + "all_cov_{}_5.pdf".format(k), SORT=False)
+ 
+
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='-k model_type -f factor')
     parser.add_argument('-k','--model_type', help='type of model', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    main(args)
+    # main(args)
+    plot_situation()
