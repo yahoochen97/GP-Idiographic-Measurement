@@ -227,5 +227,5 @@ if __name__=="__main__":
     parser.add_argument('-k','--model_type', help='type of model', required=False)
     parser.add_argument('-f','--factor', help='number of coregionalization factors', required=False)
     args = vars(parser.parse_args())
-    # main(args)
-    plot_situation()
+    main(args)
+    # plot_situation()
