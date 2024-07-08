@@ -29,7 +29,7 @@ situations = ['Di_Sit_' + str(i) for i in range(1,num_situation+1)]
 def main(args):
     load_batch_size = 512
     num_inducing = 5000
-    num_epochs = 5
+    num_epochs = 10
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
     print("loading data...")
@@ -188,7 +188,7 @@ def main(args):
 
 def plot_situation():
     PATH = "./results/GP_ESM_2/"
-    results = np.load(PATH+"situation_pop_f5.npz") 
+    results = np.load(PATH+"situation_both_f1.npz") 
 
     print(results["train_acc"])
     print(results["train_ll"])
