@@ -28,7 +28,7 @@ situations = ['Di_Sit_' + str(i) for i in range(1,num_situation+1)]
 
 def main(args):
     load_batch_size = 512
-    num_inducing = 5000
+    num_inducing = 3000
     num_epochs = 10
     FACTOR = int(args["factor"])
     model_type = args["model_type"]
