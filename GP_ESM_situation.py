@@ -23,7 +23,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel
 from utilities.util import plot_agg_task_kernel, evaluate_gpr
 
 # add situation data
-num_situation = 1
+num_situation = 10
 situations = ['Di_Sit_' + str(i) for i in range(1,num_situation+1)]
 
 def main(args):
