@@ -19,7 +19,7 @@ for SEED in range(1, MAX_SEED + 1):
         with open(loading_file) as f:
             data = f.readlines()
             data = data[-5]
-            data = int(data.split(":")[1].replace(" ", "")[:-4])
+            data = int(data.split(":")[1].replace(" ", "")[:-5])
             results[i, SEED - 1] = data
 
 results_mu = np.round(np.mean(results, axis=1), decimals=3)
