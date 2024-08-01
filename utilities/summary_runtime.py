@@ -13,8 +13,8 @@ MAX_SEED = 1
 results = np.zeros((len(MODEL), MAX_SEED))
 
 for SEED in range(1, MAX_SEED + 1):
-    for i in range(MODEL):
-        loading_file = "{}{}{}.log".format(PREFIX, SEED, MODEL)
+    for i in range(len(MODEL)):
+        loading_file = "{}{}{}.log".format(PREFIX, SEED, MODEL[i])
 
         with open(loading_file) as f:
             data = f.readlines()
