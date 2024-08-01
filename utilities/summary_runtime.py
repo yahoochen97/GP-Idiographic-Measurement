@@ -6,7 +6,7 @@ MODEL = ["f2both_prior", "r5graded_multi", "f2pop", "r5ind",
          "r5both", "r5pop", "r5DSEM", "r5sequential_multi", 
          "r5Gaussian", "r5TVAR", "r5gpcm_multi"]
 
-RESULT_PATH = "./log"
+RESULT_PATH = "./log/"
 MAX_SEED = 1
 
 results = np.zeros((len(MODEL), MAX_SEED))
