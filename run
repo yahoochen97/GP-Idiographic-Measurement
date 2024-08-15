@@ -106,3 +106,7 @@ fi
 
 # bsub -G SEAS-Lab-Garnett -o "log/loopr.log" -J "loopr" "module add seas-lab-vorobeychik;python loopr.py"
 # bsub -G SEAS-Lab-Garnett -o "log/ESM_situation.log" -J "ESM_situation"  "module add seas-lab-vorobeychik;python GP_ESM_situation.py -k both -f 1"
+
+for FACTOR in {6:10}; do
+    python loopr.py -k pop -i PCA -f $FACTOR -e 10
+done
