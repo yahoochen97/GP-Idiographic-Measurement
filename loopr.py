@@ -145,24 +145,24 @@ def main(args):
     if init_type!="PCA" or model_type=="Gaussian":
         return
 
-    file_name = directory + "/loopr_pop_f{}_e{}.pdf".format(FACTOR, num_epochs)
-    item_order = ["Sociab.1", "Sociab.2", "Sociab.3", "Sociab.4",
-                  "Assert.1", "Assert.2", "Assert.3", "Assert.4",
-                  "Energy.1", "Energy.2", "Energy.3", "Energy.4",
-                  "Compass.1", "Compass.2", "Compass.3", "Compass.4",
-                  "Respect.1", "Respect.2", "Respect.3", "Respect.4",
-                  "Trust.1", "Trust.2", "Trust.3", "Trust.4",
-                  "Organiz.1", "Organiz.2", "Organiz.3", "Organiz.4",
-                  "Product.1", "Product.2", "Product.3", "Product.4",
-                  "Respons.1", "Respons.2", "Respons.3", "Respons.4",
-                  "Anxiety.1", "Anxiety.2", "Anxiety.3", "Anxiety.4",
-                  "Depres.1", "Depres.2", "Depres.3", "Depres.4",
-                  "Volat.1", "Volat.2", "Volat.3", "Volat.4",
-                  "Curious.1", "Curious.2", "Curious.3", "Curious.4",
-                  "Aesth.1", "Aesth.2", "Aesth.3", "Aesth.4",
-                  "Creativ.1","Creativ.2","Creativ.3","Creativ.4"]
-    item_order = [Items.to_list().index(item) for item in item_order]
-    plot_task_kernel(task_kernel[item_order,:][:,item_order], Items[item_order], file_name, SORT=False)
+    # file_name = directory + "/loopr_pop_f{}_e{}.pdf".format(FACTOR, num_epochs)
+    # item_order = ["Sociab.1", "Sociab.2", "Sociab.3", "Sociab.4",
+    #               "Assert.1", "Assert.2", "Assert.3", "Assert.4",
+    #               "Energy.1", "Energy.2", "Energy.3", "Energy.4",
+    #               "Compass.1", "Compass.2", "Compass.3", "Compass.4",
+    #               "Respect.1", "Respect.2", "Respect.3", "Respect.4",
+    #               "Trust.1", "Trust.2", "Trust.3", "Trust.4",
+    #               "Organiz.1", "Organiz.2", "Organiz.3", "Organiz.4",
+    #               "Product.1", "Product.2", "Product.3", "Product.4",
+    #               "Respons.1", "Respons.2", "Respons.3", "Respons.4",
+    #               "Anxiety.1", "Anxiety.2", "Anxiety.3", "Anxiety.4",
+    #               "Depres.1", "Depres.2", "Depres.3", "Depres.4",
+    #               "Volat.1", "Volat.2", "Volat.3", "Volat.4",
+    #               "Curious.1", "Curious.2", "Curious.3", "Curious.4",
+    #               "Aesth.1", "Aesth.2", "Aesth.3", "Aesth.4",
+    #               "Creativ.1","Creativ.2","Creativ.3","Creativ.4"]
+    # item_order = [Items.to_list().index(item) for item in item_order]
+    # plot_task_kernel(task_kernel[item_order,:][:,item_order], Items[item_order], file_name, SORT=False)
 
 def cor_pca():
     data = np.load("./results/loopr/loopr_pop.npz")

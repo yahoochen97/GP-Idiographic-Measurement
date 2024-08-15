@@ -23,7 +23,7 @@ from utilities.util import correlation_matrix_distance, plot_task_kernel
 from utilities.util import plot_agg_task_kernel, evaluate_gpr
 
 # add situation data
-num_situation = 10
+num_situation = 1
 situations = ['Di_Sit_' + str(i) for i in range(1,num_situation+1)]
 
 def main(args):
@@ -48,6 +48,7 @@ def main(args):
 
     # read data
     data = pd.read_csv("./data/GP_ESM_cleaned.csv")
+    print(data.PID.unique().shape)
 
     data.columns = [x.replace(" ", "") for x in data.columns]
     ESM_items = [x.replace(" ", "") for x in codebook.iloc[:,0].to_list() if x.replace(" ", "") in Items_loopr]
@@ -188,7 +189,7 @@ def main(args):
 
 def plot_situation():
     PATH = "./results/GP_ESM_2/"
-    results = np.load(PATH+"situation_both_f1.npz") 
+    results = np.load(PATH+"situation_pop_f5.npz") 
 
     print(results["train_acc"])
     print(results["train_ll"])

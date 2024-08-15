@@ -481,7 +481,7 @@ class OrdinalLMC(ApproximateGP):
                     rank=unit_rank, prior=NormalPrior(0.,4)) for i in range(n)])
         if self.d>0:
             self.situation_task_covar_module = ModuleList([IndexKernel(num_tasks=m,\
-                    rank=unit_rank, prior=NormalPrior(0.,1)) for i in range(d)])
+                    rank=pop_rank, prior=NormalPrior(0.,1)) for i in range(d)])
            
         # fixed matrix for indicating unit in the item task kernel
         # equals 1 if and only if unit indices are the same
@@ -596,8 +596,8 @@ def plot_agg_task_kernel(task_kernel, pop_kernel, file_name):
 
     task_kernel = agg_kernel(task_kernel)
     pop_kernel = agg_kernel(pop_kernel)
-
     # cov to corr
+
     task_kernel = cov_to_corr(task_kernel)
     pop_kernel = cov_to_corr(pop_kernel)
     task_kernel = task_kernel - pop_kernel

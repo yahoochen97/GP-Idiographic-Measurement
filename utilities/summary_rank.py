@@ -6,9 +6,9 @@ import argparse
 from util import correlation_matrix_distance, plot_task_kernel
 
 MODEL = "both"
-FACTORS = [2,5]
+FACTORS = [2,5, 8]
 
-RESULT_PATH = "./results/synthetic/"
+RESULT_PATH = "./results/synthetic/bothpriorold/"
 DGP_PATH = "./data/synthetic/"
 
 def main(args):
