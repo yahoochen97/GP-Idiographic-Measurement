@@ -12,6 +12,11 @@ torch.manual_seed(8927)
 np.random.seed(8927)
 torch.set_default_dtype(torch.float64)
 
+# different seed 
+SEED=3407
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -113,7 +118,7 @@ def main(args):
     likelihood.train()
 
     # initialize covariance of pop factors
-    pop_prior = np.load("./results/loopr/loopr_pop_f{}_e10.npz".format(pop_rank))
+    pop_prior = np.load("./results/loopr{}/loopr_pop_f{}_e10.npz".format(SEED, pop_rank))
     loopr_idx = [Items_loopr.index(x) for x in ESM_items]
     model.pop_task_covar_module.covar_factor.data = torch.tensor(pop_prior["pop_factor"][loopr_idx])
     model.pop_task_covar_module.covar_factor.requires_grad = False
@@ -195,6 +200,7 @@ def main(args):
         results["unit_{}_factor".format(i)] = model.unit_task_covar_module[i].covar_factor.detach().numpy()
 
     PATH = "./results/GP_ESM_2/"
+    PATH = "./results/GP_ESM_{}/".format(SEED)
     if isinstance(likelihood, GaussianLikelihood):
         model_type = "Gaussian"
         PATH = "./results/GP_ESM_2/baselines/"

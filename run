@@ -84,7 +84,7 @@ then
     declare -a MODELS=("both")
     for MODEL in ${MODELS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
-            bsub -G SEAS-Lab-Garnett -o "log/ESM_${MODEL}_${FACTOR}.log" -J "ESM_${MODEL}_${FACTOR}" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
+            bsub -G SEAS-Lab-Garnett -o "log/ESM3407_${MODEL}_${FACTOR}.log" -J "ESM_${MODEL}_${FACTOR}" "module add seas-lab-vorobeychik;python GP_ESM.py -k ${MODEL} -f ${FACTOR}"
         done
     done
 elif [ $1 = "ESM_pred" ]
