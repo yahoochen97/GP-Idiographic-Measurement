@@ -53,6 +53,11 @@ then
     declare -a FACTORS=(6 7 8 9 10)
     declare -a EPOCHS=(5)
     TYPE="Gaussian"
+
+    # different seed
+    declare -a FACTORS=(5)
+    declare -a EPOCHS=(10)
+    TYPE="pop"
     for EPOCH in ${EPOCHS[@]}; do
         for FACTOR in ${FACTORS[@]}; do
             bsub -G SEAS-Lab-Garnett -o "log/loopr_${TYPE}_${FACTOR}.log" -J "loopr_${TYPE}_${FACTOR}" "module add seas-lab-vorobeychik; python loopr.py -k $TYPE -i PCA -f $FACTOR -e $EPOCH"

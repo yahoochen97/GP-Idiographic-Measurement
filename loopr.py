@@ -11,6 +11,11 @@ torch.manual_seed(8927)
 np.random.seed(8927)
 torch.set_default_dtype(torch.float64)
 
+# different seed 
+SEED=3407
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -127,7 +132,7 @@ def main(args):
         model_type = "Gaussian"
         init_type = "Gaussian"
 
-    directory = "./results/loopr/"
+    directory = "./results/loopr{}/".format(SEED)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -217,9 +222,10 @@ def cor_factor():
 def model_comparison():
     PATH = "./results/loopr/"
     FACTORS = [1,2,3,4,5]
+    FACTORS = [6,7,8,9,10]
     train_lls = np.zeros((3,1,len(FACTORS)))
     for i in range(len(FACTORS)):
-        results = np.load(PATH+"loopr_pop_sem_f{}_e10.npz".format(FACTORS[i]))
+        results = np.load(PATH+"loopr_pop_PCA_f{}_e10.npz".format(FACTORS[i]))
         train_ll = results["train_ll"] # * 207540
         train_lls[0,0,i] = train_ll
         train_lls[1,0,i] = results["train_acc"]
