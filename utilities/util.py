@@ -495,8 +495,17 @@ class OrdinalLMC(ApproximateGP):
         # unit indicator
         unit_indicator_x = self.fixed_module(x[:,0])
 
+        # x: [unit, item, time] (all integers)
+        # cov(x1,x2) = K_pop + I(x1[0]==x2[0])*K_task*K_time
+
+        # I(x1[0]==x2[0]): unit_indicator_x
+        # unit_indicator_x(i,j) = 1 iff i==j else 0
+        # RBF(1,0) = exp(-1/0.01) = 0; RBF(1,1) = exp(-0/0.01) = 1
+
         # task kernel
         task_covar_x = self.pop_task_covar_module(x[:,1])
+
+        # K_pop: task_covar_x
 
         if self.model_type=="ind":
             task_covar_x *= 0
@@ -548,7 +557,7 @@ def plot_task_kernel(task_kernel, item_names, file_name, SORT=True):
         item_names = item_names[kernel_order]
 
     # cov to corr
-    task_kernel = cov_to_corr(task_kernel)
+    # task_kernel = cov_to_corr(task_kernel)
 
     colormap = "PuOr_r" 
     norm = plt.Normalize(-1.0,1.0)
